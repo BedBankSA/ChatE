@@ -1,0 +1,72 @@
+# Local environment files. Never commit secrets.
+# .env.example is a tracked placeholder and must stay un-ignored.
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+
+# Dependencies, builds, and local tooling
+node_modules
+node_modules.onedrive-locked
+node_modules.reify-leftover
+.next
+out
+coverage
+.tools
+storage
+uploads
+playwright-report
+test-results
+blob-report
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Operational SQLite and sidecars.
+# migrations/*.sql is application source and stays tracked. Do not ignore *.sql.
+# Synthetic fixtures under tests/ stay tracked. package-lock.json stays tracked.
+/data/
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Customer exports
+exports/
+customer-exports/
+*.export.json
+*.export.csv
+*.export.zip
+
+# Logs, backups, and temp files
+logs/
+*.log
+npm-debug.log*
+backups/
+*.bak
+*.backup
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Private keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.p8
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+*.keystore
+
+# OS junk
+.DS_Store
+Thumbs.db
+Desktop.ini

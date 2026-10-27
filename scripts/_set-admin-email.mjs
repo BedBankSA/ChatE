@@ -1,0 +1,22 @@
+import fs from "node:fs";
+
+const target = "dr_emad@msn.com";
+const localPath = ".env.local";
+const text = fs.readFileSync(localPath, "utf8");
+const newline = text.includes("\r\n") ? "\r\n" : "\n";
+const lines = text.split(/\r?\n/);
+const index = lines.findIndex((line) => /^\s*ADMIN_EMAILS=/.test(line));
+const raw = index >= 0 ? lines[index].slice(lines[index].indexOf("=") + 1).trim().replace(/^['"]|['"]$/g, "") : "";
+const emails = raw.split(",").map((item) => item.trim()).filter(Boolean);
+if (!emails.some((email) => email.toLowerCase() === target)) emails.push(target);
+const nextLine = `ADMIN_EMAILS=${emails.join(",")}`;
+if (index >= 0) lines[index] = nextLine;
+else if (lines.at(-1) === "") lines.splice(lines.length - 1, 0, nextLine);
+else lines.push(nextLine);
+const body = lines.join(newline);
+fs.writeFileSync(localPath, text.endsWith("\n") || text.endsWith("\r\n") ? (body.endsWith(newline) ? body : body + newline) : body);
+const written = fs.readFileSync(localPath, "utf8").split(/\r?\n/).find((line) => line.startsWith("ADMIN_EMAILS="));
+const example = fs.readFileSync(".env.example", "utf8").split(/\r?\n/).find((line) => line.startsWith("ADMIN_EMAILS="));
+console.log(`LOCAL ${written}`);
+console.log(`EXAMPLE ${example}`);
+console.log(`EXISTED ${index >= 0}`);
