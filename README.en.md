@@ -10,7 +10,7 @@ The workspace at `/workspace` sends the question to the models the user selects,
 
 File support is partial. Domain code detects type from bytes: PDF, PNG, JPEG, GIF, WebP, DOCX, XLSX, ZIP, OLE, text, JSON, CSV, TSV, Markdown, audio, and video. The picker posts file names only to `POST /api/uploads`. That route checks Turnstile and then returns 401. It does not store bytes. Creating a comparison passes empty attachments.
 
-Sign-in uses the Google Identity Services button and an ID token, with a nonce cookie. This identity flow does not use a Google client secret. Turnstile runs in `interaction-only` mode with `execution: execute`: no visible checkbox unless Cloudflare asks for interaction. The server verifies the token once and does not accept reuse.
+Sign-in uses the official Google Identity Services button. That button opens one account window, then the session is completed with an ID token and a nonce cookie. This identity flow does not use a Google client secret. Turnstile runs in `interaction-only` mode with `execution: execute`: no visible checkbox unless Cloudflare asks for interaction. The server verifies the token once and does not accept reuse.
 
 ## Stack
 
@@ -37,7 +37,7 @@ npm run dev -- --port 3211
 
 Fill `.env.local` locally and do not commit it. If install fails on a TLS certificate, set `$env:NODE_OPTIONS='--use-system-ca'` and run `npm install` again.
 
-Do not start a second dev server if one is already listening on 3211. Do not use port 3000 for ChatE on this machine; that port is another application. The Google authorized JavaScript origin must match the origin actually used. Locally that is `http://localhost:3211`.
+Do not start a second dev server if one is already listening on 3211. Do not use port 3000 for ChatE on this machine; that port is another application. The dev origin must be listed in Google Cloud as an authorized JavaScript origin: `http://localhost:3211`.
 
 `npm run build` and then `npm start` produce a production build. This repository has no public deployment.
 
@@ -106,7 +106,7 @@ A license for this project has not been selected. Do not assume an open-source l
 
 Present in code, and covered by logic tests plus a temporary database file, without a live provider:
 
-- Google button and session completion when the client id and `SESSION_SECRET` are set.
+- The official Google button opens one account window, and session completion works when the client id and `SESSION_SECRET` are set. The dev origin `http://localhost:3211` must be listed in Google Cloud.
 - Turnstile widget and server verification when the Turnstile secret is set.
 - Comparison planning, blocking a restricted model, and the Haiku request shape at effort `medium`.
 - SQLite migrations, quota reservation, and binding a comparison to the session user.
@@ -116,7 +116,6 @@ Not done:
 
 - Admin dashboard. `/admin` is a static paragraph, and `GET /api/admin/overview` always returns 401 without reading a session. No page shows users, usage, or API keys. Unwired server code exists: an account query returns name, email, phone, city, and counters without question text; `002_admin.sql` adds operation tables without message text or file names; the secret-status view exposes the last four characters. `stripPrivateKeys` drops keys such as `question` and `output_text`. `npm test` does not cover these files, so the rule and the dashboard are not done.
 - Real SMS is not configured. The example sets `OTP_PROVIDER=fake`, and production rejects anything other than `http`. Even with `OTP_PROVIDER=http` and a send URL, `POST /api/otp/send` reports that a real send is not enabled. Model calls stay blocked until the phone is verified.
-- The Google origin must include the port actually used: `http://localhost:3211` locally, because 3000 is another application.
 - No public deployment.
 - This preparation does not claim a live OpenRouter or Anthropic success. No test observed here performed one.
 - Uploading, storing, and attaching files to the question is unfinished. The `storage` directory is configured and gitignored.
