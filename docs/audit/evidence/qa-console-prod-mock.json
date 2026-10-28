@@ -1,0 +1,1270 @@
+{
+  "generatedAt": "2026-10-28T13:51:33.640Z",
+  "phase": "prod-mock",
+  "baseUrl": "http://chate.test:3212",
+  "errors": [
+    {
+      "kind": "log",
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://chate.test:3212/favicon.ico",
+      "source": "network",
+      "external": false,
+      "dedupeKey": "log|error|http://chate.test:3212/favicon.ico|Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "test": "B01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=5CB68i4pnAekjehf",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=5CB68i4pnAekjehf|failed: net::ERR_ABORTED (canceled)",
+      "test": "B01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=5CB68i4pnAekjehf",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=5CB68i4pnAekjehf|failed: net::ERR_ABORTED (canceled)",
+      "test": "B01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=tXyZJ52UQVBCVsD3",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=tXyZJ52UQVBCVsD3|failed: net::ERR_ABORTED (canceled)",
+      "test": "B01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=tXyZJ52UQVBCVsD3",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=tXyZJ52UQVBCVsD3|failed: net::ERR_ABORTED (canceled)",
+      "test": "B01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=ja3eNBlsx1xIlrwz",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=ja3eNBlsx1xIlrwz|failed: net::ERR_ABORTED (canceled)",
+      "test": "B04"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=pfWg1qw4uMxqj7N2",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=pfWg1qw4uMxqj7N2|failed: net::ERR_ABORTED (canceled)",
+      "test": "B05"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=pfWg1qw4uMxqj7N2",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=pfWg1qw4uMxqj7N2|failed: net::ERR_ABORTED (canceled)",
+      "test": "B05"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=pfWg1qw4uMxqj7N2",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=pfWg1qw4uMxqj7N2|failed: net::ERR_ABORTED (canceled)",
+      "test": "B05"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=Jm_KudBfn_F9em99",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=Jm_KudBfn_F9em99|failed: net::ERR_ABORTED (canceled)",
+      "test": "B05"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=Jm_KudBfn_F9em99",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=Jm_KudBfn_F9em99|failed: net::ERR_ABORTED (canceled)",
+      "test": "B05"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=Jm_KudBfn_F9em99",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=Jm_KudBfn_F9em99|failed: net::ERR_ABORTED (canceled)",
+      "test": "B05"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=2h7RqkUd4R7tj9A_",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=2h7RqkUd4R7tj9A_|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=2h7RqkUd4R7tj9A_",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=2h7RqkUd4R7tj9A_|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=2h7RqkUd4R7tj9A_",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=2h7RqkUd4R7tj9A_|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=q9qeW4TLPSng93_h",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=q9qeW4TLPSng93_h|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=q9qeW4TLPSng93_h",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=q9qeW4TLPSng93_h|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=q9qeW4TLPSng93_h",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=q9qeW4TLPSng93_h|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=JmFnTkhJC5n8mJfW",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=JmFnTkhJC5n8mJfW|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=JmFnTkhJC5n8mJfW",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=JmFnTkhJC5n8mJfW|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=YaM2HU4MTygajTCF",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=YaM2HU4MTygajTCF|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=YaM2HU4MTygajTCF",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=YaM2HU4MTygajTCF|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=xFVjKFL12UrVWmwy",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=xFVjKFL12UrVWmwy|failed: net::ERR_ABORTED (canceled)",
+      "test": "B07"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=xFVjKFL12UrVWmwy",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=xFVjKFL12UrVWmwy|failed: net::ERR_ABORTED (canceled)",
+      "test": "B07"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=xFVjKFL12UrVWmwy",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=xFVjKFL12UrVWmwy|failed: net::ERR_ABORTED (canceled)",
+      "test": "B07"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=we3ubxF55xroP6U0",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=we3ubxF55xroP6U0|failed: net::ERR_ABORTED (canceled)",
+      "test": "B07"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=we3ubxF55xroP6U0",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=we3ubxF55xroP6U0|failed: net::ERR_ABORTED (canceled)",
+      "test": "B07"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=we3ubxF55xroP6U0",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=we3ubxF55xroP6U0|failed: net::ERR_ABORTED (canceled)",
+      "test": "B07"
+    },
+    {
+      "kind": "log",
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://chate.test:3212/qa-missing-1793195463947",
+      "source": "network",
+      "external": false,
+      "dedupeKey": "log|error|http://chate.test:3212/qa-missing-1793195463947|Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "test": "B08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=OXEfaXsCQr9qpu4a",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=OXEfaXsCQr9qpu4a|failed: net::ERR_ABORTED (canceled)",
+      "test": "B08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=OXEfaXsCQr9qpu4a",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=OXEfaXsCQr9qpu4a|failed: net::ERR_ABORTED (canceled)",
+      "test": "B08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=242tnRB5_IlegzMX",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=242tnRB5_IlegzMX|failed: net::ERR_ABORTED (canceled)",
+      "test": "B08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=242tnRB5_IlegzMX",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=242tnRB5_IlegzMX|failed: net::ERR_ABORTED (canceled)",
+      "test": "B08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=242tnRB5_IlegzMX",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=242tnRB5_IlegzMX|failed: net::ERR_ABORTED (canceled)",
+      "test": "B08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=Xsk9VVY3wQvHYMzX",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=Xsk9VVY3wQvHYMzX|failed: net::ERR_ABORTED (canceled)",
+      "test": "W01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=Xsk9VVY3wQvHYMzX",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=Xsk9VVY3wQvHYMzX|failed: net::ERR_ABORTED (canceled)",
+      "test": "W01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=Xsk9VVY3wQvHYMzX",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=Xsk9VVY3wQvHYMzX|failed: net::ERR_ABORTED (canceled)",
+      "test": "W01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=v67lk4E8a3YfLt6y",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=v67lk4E8a3YfLt6y|failed: net::ERR_ABORTED (canceled)",
+      "test": "W01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=v67lk4E8a3YfLt6y",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=v67lk4E8a3YfLt6y|failed: net::ERR_ABORTED (canceled)",
+      "test": "W01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=v67lk4E8a3YfLt6y",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=v67lk4E8a3YfLt6y|failed: net::ERR_ABORTED (canceled)",
+      "test": "W01"
+    },
+    {
+      "kind": "log",
+      "level": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://chate.test:3212/api/comparisons",
+      "source": "network",
+      "external": false,
+      "dedupeKey": "log|error|http://chate.test:3212/api/comparisons|Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "test": "W04"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=kyMtruI16YAQ9YO-",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=kyMtruI16YAQ9YO-|failed: net::ERR_ABORTED (canceled)",
+      "test": "W08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=WzUDN3am5ctH078F",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=WzUDN3am5ctH078F|failed: net::ERR_ABORTED (canceled)",
+      "test": "A02"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=WzUDN3am5ctH078F",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=WzUDN3am5ctH078F|failed: net::ERR_ABORTED (canceled)",
+      "test": "A02"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=PEFAxh8bFtAgIpcp",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=PEFAxh8bFtAgIpcp|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/workspace?_rsc=PEFAxh8bFtAgIpcp",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/workspace?_rsc=PEFAxh8bFtAgIpcp|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=PEFAxh8bFtAgIpcp",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=PEFAxh8bFtAgIpcp|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=PEFAxh8bFtAgIpcp",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=PEFAxh8bFtAgIpcp|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=pWvc6Rnt86FeKhA3",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=pWvc6Rnt86FeKhA3|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/workspace?_rsc=pWvc6Rnt86FeKhA3",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/workspace?_rsc=pWvc6Rnt86FeKhA3|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=pWvc6Rnt86FeKhA3",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=pWvc6Rnt86FeKhA3|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=pWvc6Rnt86FeKhA3",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=pWvc6Rnt86FeKhA3|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    }
+  ],
+  "warnings": [],
+  "external": [],
+  "network": [
+    {
+      "kind": "network",
+      "level": "warn",
+      "text": "HTTP 404 Other",
+      "url": "http://chate.test:3212/favicon.ico",
+      "status": 404,
+      "external": false,
+      "noise": true,
+      "dedupeKey": "network|warn|http://chate.test:3212/favicon.ico|HTTP 404 Other",
+      "test": "B01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=5CB68i4pnAekjehf",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=5CB68i4pnAekjehf|failed: net::ERR_ABORTED (canceled)",
+      "test": "B01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=5CB68i4pnAekjehf",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=5CB68i4pnAekjehf|failed: net::ERR_ABORTED (canceled)",
+      "test": "B01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=tXyZJ52UQVBCVsD3",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=tXyZJ52UQVBCVsD3|failed: net::ERR_ABORTED (canceled)",
+      "test": "B01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=tXyZJ52UQVBCVsD3",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=tXyZJ52UQVBCVsD3|failed: net::ERR_ABORTED (canceled)",
+      "test": "B01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=ja3eNBlsx1xIlrwz",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=ja3eNBlsx1xIlrwz|failed: net::ERR_ABORTED (canceled)",
+      "test": "B04"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=pfWg1qw4uMxqj7N2",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=pfWg1qw4uMxqj7N2|failed: net::ERR_ABORTED (canceled)",
+      "test": "B05"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=pfWg1qw4uMxqj7N2",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=pfWg1qw4uMxqj7N2|failed: net::ERR_ABORTED (canceled)",
+      "test": "B05"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=pfWg1qw4uMxqj7N2",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=pfWg1qw4uMxqj7N2|failed: net::ERR_ABORTED (canceled)",
+      "test": "B05"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=Jm_KudBfn_F9em99",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=Jm_KudBfn_F9em99|failed: net::ERR_ABORTED (canceled)",
+      "test": "B05"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=Jm_KudBfn_F9em99",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=Jm_KudBfn_F9em99|failed: net::ERR_ABORTED (canceled)",
+      "test": "B05"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=Jm_KudBfn_F9em99",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=Jm_KudBfn_F9em99|failed: net::ERR_ABORTED (canceled)",
+      "test": "B05"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=2h7RqkUd4R7tj9A_",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=2h7RqkUd4R7tj9A_|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=2h7RqkUd4R7tj9A_",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=2h7RqkUd4R7tj9A_|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=2h7RqkUd4R7tj9A_",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=2h7RqkUd4R7tj9A_|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=q9qeW4TLPSng93_h",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=q9qeW4TLPSng93_h|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=q9qeW4TLPSng93_h",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=q9qeW4TLPSng93_h|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=q9qeW4TLPSng93_h",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=q9qeW4TLPSng93_h|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=JmFnTkhJC5n8mJfW",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=JmFnTkhJC5n8mJfW|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=JmFnTkhJC5n8mJfW",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=JmFnTkhJC5n8mJfW|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=YaM2HU4MTygajTCF",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=YaM2HU4MTygajTCF|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=YaM2HU4MTygajTCF",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=YaM2HU4MTygajTCF|failed: net::ERR_ABORTED (canceled)",
+      "test": "B06"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=xFVjKFL12UrVWmwy",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=xFVjKFL12UrVWmwy|failed: net::ERR_ABORTED (canceled)",
+      "test": "B07"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=xFVjKFL12UrVWmwy",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=xFVjKFL12UrVWmwy|failed: net::ERR_ABORTED (canceled)",
+      "test": "B07"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=xFVjKFL12UrVWmwy",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=xFVjKFL12UrVWmwy|failed: net::ERR_ABORTED (canceled)",
+      "test": "B07"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=we3ubxF55xroP6U0",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=we3ubxF55xroP6U0|failed: net::ERR_ABORTED (canceled)",
+      "test": "B07"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=we3ubxF55xroP6U0",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=we3ubxF55xroP6U0|failed: net::ERR_ABORTED (canceled)",
+      "test": "B07"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=we3ubxF55xroP6U0",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=we3ubxF55xroP6U0|failed: net::ERR_ABORTED (canceled)",
+      "test": "B07"
+    },
+    {
+      "kind": "network",
+      "level": "warn",
+      "text": "HTTP 404 Document",
+      "url": "http://chate.test:3212/qa-missing-1793195463947",
+      "status": 404,
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network|warn|http://chate.test:3212/qa-missing-1793195463947|HTTP 404 Document",
+      "test": "B08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=OXEfaXsCQr9qpu4a",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=OXEfaXsCQr9qpu4a|failed: net::ERR_ABORTED (canceled)",
+      "test": "B08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=OXEfaXsCQr9qpu4a",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=OXEfaXsCQr9qpu4a|failed: net::ERR_ABORTED (canceled)",
+      "test": "B08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=242tnRB5_IlegzMX",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=242tnRB5_IlegzMX|failed: net::ERR_ABORTED (canceled)",
+      "test": "B08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=242tnRB5_IlegzMX",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=242tnRB5_IlegzMX|failed: net::ERR_ABORTED (canceled)",
+      "test": "B08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=242tnRB5_IlegzMX",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=242tnRB5_IlegzMX|failed: net::ERR_ABORTED (canceled)",
+      "test": "B08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=Xsk9VVY3wQvHYMzX",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=Xsk9VVY3wQvHYMzX|failed: net::ERR_ABORTED (canceled)",
+      "test": "W01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=Xsk9VVY3wQvHYMzX",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=Xsk9VVY3wQvHYMzX|failed: net::ERR_ABORTED (canceled)",
+      "test": "W01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=Xsk9VVY3wQvHYMzX",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=Xsk9VVY3wQvHYMzX|failed: net::ERR_ABORTED (canceled)",
+      "test": "W01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=v67lk4E8a3YfLt6y",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=v67lk4E8a3YfLt6y|failed: net::ERR_ABORTED (canceled)",
+      "test": "W01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=v67lk4E8a3YfLt6y",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=v67lk4E8a3YfLt6y|failed: net::ERR_ABORTED (canceled)",
+      "test": "W01"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=v67lk4E8a3YfLt6y",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=v67lk4E8a3YfLt6y|failed: net::ERR_ABORTED (canceled)",
+      "test": "W01"
+    },
+    {
+      "kind": "network",
+      "level": "warn",
+      "text": "HTTP 403 Fetch",
+      "url": "http://chate.test:3212/api/comparisons",
+      "status": 403,
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network|warn|http://chate.test:3212/api/comparisons|HTTP 403 Fetch",
+      "test": "W04"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=kyMtruI16YAQ9YO-",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=kyMtruI16YAQ9YO-|failed: net::ERR_ABORTED (canceled)",
+      "test": "W08"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=WzUDN3am5ctH078F",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=WzUDN3am5ctH078F|failed: net::ERR_ABORTED (canceled)",
+      "test": "A02"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=WzUDN3am5ctH078F",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=WzUDN3am5ctH078F|failed: net::ERR_ABORTED (canceled)",
+      "test": "A02"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=PEFAxh8bFtAgIpcp",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=PEFAxh8bFtAgIpcp|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/workspace?_rsc=PEFAxh8bFtAgIpcp",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/workspace?_rsc=PEFAxh8bFtAgIpcp|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=PEFAxh8bFtAgIpcp",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=PEFAxh8bFtAgIpcp|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=PEFAxh8bFtAgIpcp",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=PEFAxh8bFtAgIpcp|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/?_rsc=pWvc6Rnt86FeKhA3",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=pWvc6Rnt86FeKhA3|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/workspace?_rsc=pWvc6Rnt86FeKhA3",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/workspace?_rsc=pWvc6Rnt86FeKhA3|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/privacy?_rsc=pWvc6Rnt86FeKhA3",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=pWvc6Rnt86FeKhA3|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    },
+    {
+      "kind": "network-failed",
+      "level": "error",
+      "text": "failed: net::ERR_ABORTED (canceled)",
+      "url": "http://chate.test:3212/history?_rsc=pWvc6Rnt86FeKhA3",
+      "external": false,
+      "noise": false,
+      "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=pWvc6Rnt86FeKhA3|failed: net::ERR_ABORTED (canceled)",
+      "test": "M03"
+    }
+  ],
+  "documents": [
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/api/theme",
+      "method": "POST",
+      "status": null,
+      "location": null
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/api/theme",
+      "method": "POST",
+      "status": null,
+      "location": null
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/terms",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/account",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/history",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/admin",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/qa-missing-1793195463947",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "url": "http://chate.test:3212/workspace",
+      "method": "GET",
+      "status": null,
+      "location": null
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/workspace",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/workspace",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/workspace",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/workspace",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/workspace",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/workspace",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/workspace",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/workspace",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/privacy",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/terms",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/account",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/history",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/admin",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/profile/complete",
+      "method": "GET",
+      "status": null,
+      "location": null
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/workspace",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/workspace",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/workspace",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/workspace",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://chate.test:3212/profile/complete",
+      "method": "GET",
+      "status": 200
+    }
+  ]
+}

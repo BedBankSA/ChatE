@@ -1,11 +1,14 @@
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
+import { IMAGE_LIMIT_BYTES } from "@/domain/comparison/plan";
 import { findModel } from "@/domain/models/catalog";
 import { dispatchModel } from "@/domain/models/dispatch";
 import { writeLog } from "@/domain/security/redact";
 import { recordModelInvocation } from "@/server/admin/operations";
 import { finishJob } from "@/server/db/settle";
 import { getDatabase } from "@/server/db/runtime";
+import { readOwnedFileRow } from "@/server/files/repository";
+import { imageMediaType, readStoredBytes, type StorageEnv } from "@/server/files/storage";
 import {
   claimComparisonJob,
   closeReservations,
@@ -115,7 +118,7 @@ async function executeRun(
       provider: run.provider,
       modelId: model.id,
       endpoint: model.endpoint,
-      request: run.request,
+      request: hydrateImageRefs(db, userId, run.provider, run.request),
     }, {
       fetchImpl: fetch,
       openRouterKey: process.env.OPENROUTER_API_KEY,
@@ -183,6 +186,61 @@ async function executeRun(
       });
     }
   }
+}
+
+/**
+ * Replaces `{type:"image_ref"}` placeholders with real image content read from
+ * private storage: Anthropic base64 blocks and OpenRouter data URLs. Ownership
+ * is enforced through the files row (id + user), the media type must match the
+ * detected type, and images above IMAGE_LIMIT_BYTES are downgraded to text, so a
+ * stale or forged placeholder can never exfiltrate another user's file.
+ * Requests without image placeholders are returned unchanged in shape.
+ */
+export function hydrateImageRefs(
+  db: DatabaseSync,
+  userId: string,
+  provider: "anthropic" | "openrouter",
+  request: Record<string, unknown> | null,
+  options: { env?: StorageEnv; cwd?: string } = {},
+): Record<string, unknown> | null {
+  if (!request) return null;
+  const cloned = JSON.parse(JSON.stringify(request)) as Record<string, unknown>;
+  const messages = cloned.messages;
+  if (!Array.isArray(messages)) return cloned;
+  for (const message of messages) {
+    if (!message || typeof message !== "object") continue;
+    const record = message as Record<string, unknown>;
+    if (!Array.isArray(record.content)) continue;
+    record.content = record.content.map((part) => hydratePart(db, userId, provider, part, options));
+  }
+  return cloned;
+}
+
+function hydratePart(
+  db: DatabaseSync,
+  userId: string,
+  provider: "anthropic" | "openrouter",
+  part: unknown,
+  options: { env?: StorageEnv; cwd?: string },
+): unknown {
+  if (!part || typeof part !== "object") return part;
+  const placeholder = part as Record<string, unknown>;
+  if (placeholder.type !== "image_ref") return part;
+  const fallback = { type: "text", text: "[تعذر تضمين الصورة المرفقة]" };
+  const fileId = typeof placeholder.fileId === "string" ? placeholder.fileId : "";
+  const mediaType = typeof placeholder.mediaType === "string" ? placeholder.mediaType : "";
+  const row = readOwnedFileRow(db, userId, fileId);
+  if (!row) return fallback;
+  const expected = imageMediaType(row.detectedType);
+  if (!expected || expected !== mediaType) return fallback;
+  if (row.byteSize > IMAGE_LIMIT_BYTES) return fallback;
+  const bytes = readStoredBytes({ userId, storageKey: row.storageKey, env: options.env, cwd: options.cwd });
+  if (!bytes || bytes.byteLength === 0) return fallback;
+  const data = bytes.toString("base64");
+  if (provider === "anthropic") {
+    return { type: "image", source: { type: "base64", media_type: expected, data } };
+  }
+  return { type: "image_url", image_url: { url: `data:${expected};base64,${data}` } };
 }
 
 function emptyFailure(message: string, errorCode: string) {

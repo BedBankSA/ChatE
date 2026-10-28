@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync, SQLOutputValue } from "node:sqlite";
 import type { PlannedRun } from "@/domain/comparison/plan";
-import type { PublicComparison, PublicRun } from "@/domain/comparison/view";
+import type { PublicAttachment, PublicComparison, PublicRun } from "@/domain/comparison/view";
 import { findModel } from "@/domain/models/catalog";
 import type { QuotaLimits } from "@/server/db/quota";
 import { SHARED_QUOTA_ID, userQuotaId } from "@/server/db/quota-ids";
@@ -23,6 +23,10 @@ export function createComparison(
     evidenceMode: "native" | "unified";
     runs: PlannedRun[];
     limits: QuotaLimits;
+    /** Owned file ids to persist in the evidence snapshot (already validated). */
+    attachmentIds?: readonly string[];
+    /** Shared evidence text derived from the attachments. */
+    evidenceText?: string;
   },
 ): CreateComparisonResult {
   return immediateTransaction(db, (): { commit: boolean; value: CreateComparisonResult } => {
@@ -57,7 +61,12 @@ export function createComparison(
       randomUUID(),
       comparisonId,
       input.userId,
-      JSON.stringify({ question: input.question, evidenceMode: input.evidenceMode, evidenceText: "", attachmentIds: [] }),
+      JSON.stringify({
+        question: input.question,
+        evidenceMode: input.evidenceMode,
+        evidenceText: input.evidenceText ?? "",
+        attachmentIds: [...(input.attachmentIds ?? [])],
+      }),
     );
     const insertRun = db.prepare(`
       INSERT INTO model_runs (id, comparison_id, user_id, model_id, status, requested_settings, input_label, output_text)
@@ -95,7 +104,45 @@ export function readComparison(db: DatabaseSync, userId: string, comparisonId: s
     | Record<string, SQLOutputValue>
     | undefined;
   if (!row || typeof row.id !== "string" || typeof row.question !== "string" || typeof row.status !== "string") return null;
-  return { id: row.id, question: row.question, status: row.status, runs: readRuns(db, comparisonId) };
+  return {
+    id: row.id,
+    question: row.question,
+    status: row.status,
+    runs: readRuns(db, comparisonId),
+    attachments: readAttachments(db, userId, comparisonId),
+  };
+}
+
+/**
+ * Attachments are stored as ids in evidence_snapshots.payload; names/types are
+ * resolved from the owner's files rows. A comparison never shows another user's
+ * file: the join is filtered by the same userId as the comparison read.
+ */
+function readAttachments(db: DatabaseSync, userId: string, comparisonId: string): PublicAttachment[] {
+  const snapshot = db.prepare(`
+    SELECT payload FROM evidence_snapshots
+    WHERE comparison_id = ? AND user_id = ?
+    ORDER BY rowid LIMIT 1
+  `).get(comparisonId, userId) as Record<string, SQLOutputValue> | undefined;
+  const payload = parseJson(snapshot?.payload);
+  const ids = Array.isArray(payload?.attachmentIds)
+    ? payload.attachmentIds.filter((item): item is string => typeof item === "string" && item.length > 0)
+    : [];
+  if (ids.length === 0) return [];
+  const placeholders = ids.map(() => "?").join(", ");
+  const rows = db.prepare(`
+    SELECT id, original_name, detected_type FROM files
+    WHERE user_id = ? AND id IN (${placeholders})
+  `).all(userId, ...ids) as unknown as Record<string, SQLOutputValue>[];
+  const byId = new Map<string, PublicAttachment>();
+  for (const row of rows) {
+    if (typeof row.id !== "string" || typeof row.original_name !== "string" || typeof row.detected_type !== "string") continue;
+    byId.set(row.id, { id: row.id, name: row.original_name, detectedType: row.detected_type });
+  }
+  return ids.flatMap((id) => {
+    const attachment = byId.get(id);
+    return attachment ? [attachment] : [];
+  });
 }
 
 export type RunnableRun = {

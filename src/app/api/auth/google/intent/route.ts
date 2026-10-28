@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import { newNonce } from "@/domain/auth/session";
+import { rateLimitResponse, sameOriginRequest } from "@/server/guard";
 import { jsonError } from "@/server/http";
 
-export async function POST() {
+export async function POST(request?: Request) {
+  // Unauthenticated nonce minting: throttle per client before doing any work.
+  // Next always supplies the Request; the optional parameter keeps the direct
+  // unit-test call POST() working without inventing a fake request.
+  if (request) {
+    if (!sameOriginRequest(request)) return jsonError("الطلب مرفوض.", "origin", 403);
+    const limited = rateLimitResponse(request, "auth:intent");
+    if (limited) return limited;
+  }
   if (!process.env.GOOGLE_CLIENT_ID) {
     return jsonError("دخول Google ينتظر معرّف العميل. لم تُنشأ جلسة.", "GOOGLE_UNCONFIGURED", 503);
   }

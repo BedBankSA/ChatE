@@ -5,6 +5,7 @@
 .env.*.local
 .env.*
 !.env.example
+!deploy/.env.production.example
 
 # Dependencies, builds, and local tooling
 node_modules
@@ -15,7 +16,6 @@ out
 coverage
 .tools
 storage
-uploads
 playwright-report
 test-results
 blob-report

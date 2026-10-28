@@ -1,0 +1,43 @@
+# ChatE — Caddy v2 reverse proxy with automatic TLS (Let's Encrypt).
+# Install: /etc/caddy/Caddyfile ; then `systemctl reload caddy`.
+# DNS: A/AAAA record for the domain -> VPS public IP. If Cloudflare proxies the
+# record (orange cloud), Caddy still solves HTTP-01; alternatively use DNS-01.
+# Owner replaces chate.example.com and the ACME e-mail.
+{
+	email ops@example.com
+	admin off
+	servers {
+		trusted_proxies static 127.0.0.1/32 ::1/128
+	}
+}
+
+chate.example.com {
+	encode zstd gzip
+	header {
+		# The app already emits CSP/HSTS/X-Frame-Options; these add proxy-side basics.
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+	request_body {
+		max_size 30MB
+	}
+	reverse_proxy 127.0.0.1:3211 {
+		health_uri /api/models
+		health_interval 30s
+		health_timeout 5s
+		header_up X-Forwarded-For {remote_host}
+		# Cloudflare sets CF-Connecting-IP; the app prefers it for Turnstile remoteip.
+		# Caddy forwards it untouched. Do not let clients spoof it: restrict direct
+		# origin access to Cloudflare IP ranges at the firewall when proxying via CF.
+	}
+	log {
+		output file /var/log/caddy/chate-access.log {
+			roll_size 50MB
+			roll_keep 10
+			roll_keep_for 720h
+		}
+		format json
+	}
+}

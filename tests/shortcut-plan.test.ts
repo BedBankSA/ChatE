@@ -69,13 +69,28 @@ describe("shortcut plans", () => {
     }, false)?.message).toBe(PHONE_VERIFICATION_MESSAGE);
     const previous = process.env.SESSION_SECRET;
     process.env.SESSION_SECRET = "test-session-secret";
+    const db = openDatabase(":memory:");
     try {
+      migrateDatabase(db, path.join(process.cwd(), "migrations"));
+      insertUser(db, { id: "user-1", googleSub: "user-1", email: "layan@example.com", name: "ليان" });
       const now = 1_700_000_000;
-      const token = signSession({ userId: "user-1", googleSub: "user-1", exp: now + 60, csrf: "csrf" }, "test-session-secret");
+      const token = signSession(
+        { userId: "user-1", googleSub: "user-1", exp: now + 60, csrf: "csrf", iat: now },
+        "test-session-secret",
+      );
       const signed = new Request("http://localhost/api/comparisons", { headers: { cookie: `chate_session=${token}` } });
-      expect(sessionFromRequest(signed, now)?.userId).toBe("user-1");
-      expect(sessionFromRequest(new Request("http://localhost/api/comparisons"), now)).toBeNull();
+      expect(sessionFromRequest(signed, now, db)?.userId).toBe("user-1");
+      expect(sessionFromRequest(new Request("http://localhost/api/comparisons"), now, db)).toBeNull();
+      // A correctly signed token for a user that is not stored must be rejected:
+      // the HMAC proves issuance, not that the account still exists.
+      const ghost = signSession(
+        { userId: "ghost", googleSub: "ghost", exp: now + 60, csrf: "csrf", iat: now },
+        "test-session-secret",
+      );
+      const forged = new Request("http://localhost/api/comparisons", { headers: { cookie: `chate_session=${ghost}` } });
+      expect(sessionFromRequest(forged, now, db)).toBeNull();
     } finally {
+      if (db.isOpen) db.close();
       if (previous === undefined) delete process.env.SESSION_SECRET;
       else process.env.SESSION_SECRET = previous;
     }
@@ -142,7 +157,7 @@ describe("shortcut plans", () => {
       modelId: "claude-haiku-5-5",
       endpoint: HAIKU_URL,
       request: haikuRun?.request ?? null,
-    }, { fetchImpl, anthropicKey: "test-anthropic-key", appUrl: "http://localhost:3211" });
+    }, { fetchImpl, anthropicKey: "test-anthropic-key", appUrl: "http://localhost:3211", env: { HAIKU_LIVE_CALLS: "1" } });
     expect(haiku.outputText).toBe("جواب Haiku");
     expect(haiku.costUsd).not.toBeNull();
     const paid = await dispatchModel({

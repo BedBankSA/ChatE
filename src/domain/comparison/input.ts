@@ -1,12 +1,15 @@
 import { EMPTY_QUESTION_MESSAGE } from "@/domain/workspace-start";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export const MAX_ATTACHMENT_IDS = 5;
 
 export type ComparisonInput = {
   question: string;
   evidenceMode: "native" | "unified";
   answerModelIds: string[];
   idempotencyKey: string;
+  /** Owned file ids to attach; validated as UUIDs and deduplicated (order kept). */
+  attachmentIds: string[];
 };
 
 export function parseComparisonBody(
@@ -25,6 +28,8 @@ export function parseComparisonBody(
   }
   const idempotencyKey = typeof body.idempotencyKey === "string" ? body.idempotencyKey.trim() : "";
   if (!UUID.test(idempotencyKey)) return { ok: false, message: "مفتاح منع التكرار غير صالح.", code: "idempotency", status: 400 };
+  const attachmentIds = parseAttachmentIds(body.attachmentIds);
+  if (!attachmentIds.ok) return attachmentIds;
   return {
     ok: true,
     value: {
@@ -32,6 +37,24 @@ export function parseComparisonBody(
       evidenceMode,
       answerModelIds: body.answerModelIds.map((id) => id.trim()),
       idempotencyKey,
+      attachmentIds: attachmentIds.value,
     },
   };
+}
+
+function parseAttachmentIds(
+  raw: unknown,
+): { ok: true; value: string[] } | { ok: false; message: string; code: string; status: number } {
+  if (raw == null) return { ok: true, value: [] };
+  const invalid = { ok: false as const, message: "قائمة الملفات المرفقة غير صالحة.", code: "attachments", status: 400 };
+  if (!Array.isArray(raw)) return invalid;
+  if (raw.length > MAX_ATTACHMENT_IDS) {
+    return { ok: false, message: "أقصى عدد للمرفقات خمسة.", code: "attachments", status: 400 };
+  }
+  const ids: string[] = [];
+  for (const value of raw) {
+    if (typeof value !== "string" || !UUID.test(value)) return invalid;
+    if (!ids.includes(value)) ids.push(value);
+  }
+  return { ok: true, value: ids };
 }

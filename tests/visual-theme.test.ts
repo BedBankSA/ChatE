@@ -58,6 +58,7 @@ describe("approved visual theme", () => {
     expect(layout).toContain("site-header-top");
     expect(layout).toContain("site-header-nav");
     expect(css).toContain(".site-header-top");
-    expect(source("src/app/api/theme/route.ts")).toContain("themeRedirectTarget");
+    expect(source("src/app/api/theme/route.ts")).toContain("themeReturnPath");
+    expect(source("src/app/api/theme/route.ts")).toContain("sameOriginRequest");
   });
 });

@@ -11,11 +11,19 @@ export type PublicRun = {
   completionMs: number | null;
 };
 
+export type PublicAttachment = {
+  id: string;
+  name: string;
+  detectedType: string;
+};
+
 export type PublicComparison = {
   id: string;
   question: string;
   status: string;
   runs: PublicRun[];
+  /** Files attached to the comparison; empty when none were sent. */
+  attachments?: PublicAttachment[];
 };
 
 const STATUS_TEXT: Record<string, string> = {

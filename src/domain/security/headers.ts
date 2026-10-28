@@ -22,6 +22,10 @@ export function securityHeaders(https: boolean, development = false): { key: str
   const headers = [
     { key: "X-Content-Type-Options", value: "nosniff" },
     { key: "X-Frame-Options", value: "DENY" },
+    // Google Identity Services opens a popup, so the cross-window relationship
+    // must be allowed to popups while every other window reference is severed.
+    { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+    { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
     { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
     { key: "Content-Security-Policy", value: contentSecurityPolicy(development) },

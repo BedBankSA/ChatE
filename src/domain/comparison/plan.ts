@@ -10,6 +10,13 @@ export const BASE_INSTRUCTIONS =
 export const CANCEL_MESSAGE = "أُوقف العرض المحلي. قد لا يتوقف المزود فورًا.";
 export const IMAGE_LIMIT_BYTES = 5 * 1024 * 1024;
 
+/**
+ * Plan-time image placeholder. The persisted request deliberately does not
+ * contain image bytes: execute.ts replaces this block with the real base64
+ * content (Anthropic) or a data URL (OpenRouter) read from private storage.
+ */
+type ImageRefContent = { type: "image_ref"; fileId: string; mediaType: string };
+
 export type EvidenceMode = "unified" | "native";
 
 export type AttachmentSnapshot = {
@@ -108,15 +115,18 @@ function planAnswer(
     return blocked(model, "answer", "unfit", "غير مناسب لهذا الطلب", input.question, label);
   }
   if (model.provider === "anthropic") {
-    const content: HaikuContent[] = [{ type: "text", text: `${prompt.user}\n${label}` }];
+    const content: Array<HaikuContent | ImageRefContent> = [{ type: "text", text: `${prompt.user}\n${label}` }];
     const image = input.evidenceMode === "native" ? input.attachments.find((item) => item.image) : undefined;
     if (image?.image && image.image.byteSize <= IMAGE_LIMIT_BYTES && model.inputModalities.includes("image")) {
       content[0] = { type: "text", text: `${prompt.user}\n${label}\nملف الصورة: ${image.fileId}` };
+      content.push({ type: "image_ref", fileId: image.fileId, mediaType: image.image.mediaType });
     }
     const request = buildHaikuRequest({
       maxTokens: haikuMaxTokens(estimateTokens(prompt.user)),
       system: prompt.system,
-      content,
+      // The placeholder is hydrated by execute.ts before dispatch; the body
+      // type only describes blocks that actually reach the provider.
+      content: content as HaikuContent[],
     });
     return {
       ...shell(model, "answer", input.question, label),

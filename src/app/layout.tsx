@@ -45,6 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             {admin ? <Link href="/admin">الإدارة</Link> : null}
             <Link href="/history">السجل</Link>
             <Link href="/privacy">الخصوصية</Link>
+            <Link href="/terms">الشروط</Link>
           </nav>
         </header>
         <main id="content">{children}</main>

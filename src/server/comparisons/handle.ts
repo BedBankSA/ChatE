@@ -11,8 +11,14 @@ import { jsonError, jsonOk } from "@/server/http";
 import { readComparisonSession } from "@/server/google-session";
 import { createComparison, readComparison } from "@/server/comparisons/store";
 import { scheduleComparison } from "@/server/comparisons/execute";
+import { loadAttachmentSnapshots } from "@/server/files/repository";
 
 const ANONYMOUS_MESSAGE = "يلزم تسجيل الدخول قبل إرسال المقارنة";
+
+function noStore(response: Response): Response {
+  response.headers.set("cache-control", "no-store");
+  return response;
+}
 
 export async function postComparison(request: Request): Promise<Response> {
   const body = await readJson(request);
@@ -32,13 +38,18 @@ export async function postComparison(request: Request): Promise<Response> {
   if (!parsed.ok) return jsonError(parsed.message, parsed.code, parsed.status);
   const turnstile = await gateTurnstile(request, body, "comparison");
   if (turnstile) return turnstile;
+  // Attachments are resolved after Turnstile (so an anonymous/forged caller
+  // cannot probe file ids) and before planning, because the shared evidence
+  // text decides both the prompt and the model context fit.
+  const attachments = loadAttachmentSnapshots(db, session.userId, parsed.value.attachmentIds);
+  if (!attachments.ok) return jsonError(attachments.message, attachments.code, attachments.status);
   let runs;
   try {
     runs = planRuns({
       question: parsed.value.question,
       evidenceMode: parsed.value.evidenceMode,
-      evidenceText: "",
-      attachments: [],
+      evidenceText: attachments.evidenceText,
+      attachments: attachments.attachments,
       answerModelIds: parsed.value.answerModelIds,
       decisionModelIds: [],
       evalModelIds: [],
@@ -64,6 +75,8 @@ export async function postComparison(request: Request): Promise<Response> {
       evidenceMode: parsed.value.evidenceMode,
       runs,
       limits: readQuotaLimits(process.env),
+      attachmentIds: parsed.value.attachmentIds,
+      evidenceText: attachments.evidenceText,
     });
   } catch {
     return jsonError("تعذر حفظ المقارنة.", "store", 500);
@@ -84,7 +97,7 @@ export async function postComparison(request: Request): Promise<Response> {
   if (!created.duplicate || created.comparison.status === "queued" || created.comparison.status === "running") {
     scheduleComparison(created.comparison.id);
   }
-  return jsonOk(created.comparison);
+  return noStore(jsonOk(created.comparison));
 }
 
 export async function getComparison(request: Request, comparisonId: string): Promise<Response> {
@@ -100,5 +113,5 @@ export async function getComparison(request: Request, comparisonId: string): Pro
   const comparison = readComparison(db, session.userId, comparisonId);
   if (!comparison) return jsonError("المقارنة غير موجودة.", "not_found", 404);
   if (comparison.status === "queued" || comparison.status === "running") scheduleComparison(comparison.id);
-  return jsonOk(comparison);
+  return noStore(jsonOk(comparison));
 }

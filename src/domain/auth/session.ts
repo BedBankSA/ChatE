@@ -1,4 +1,5 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { sessionStillValid, suspensionActive } from "@/domain/admin/suspension";
 
 export type SessionPayload = {
   userId: string;
@@ -6,6 +7,13 @@ export type SessionPayload = {
   exp: number;
   csrf: string;
   iat?: number;
+};
+
+/** The mutable server-side facts a signed token is checked against per request. */
+export type StoredSessionStanding = {
+  status: string;
+  suspendedUntil: string | null;
+  sessionValidAfter: string | null;
 };
 
 const MAX_TOKEN_LENGTH = 4096;
@@ -50,8 +58,37 @@ export function sessionCookie(https: boolean): {
   secure: boolean;
   sameSite: "lax";
   path: "/";
+  priority: "high";
 } {
-  return { httpOnly: true, secure: https, sameSite: "lax", path: "/" };
+  // Fail closed in production: never emit a non-Secure session cookie even when
+  // APP_URL is missing or misconfigured, because the login route derives the
+  // "https" hint from APP_URL instead of from the request.
+  const secure = https || process.env.NODE_ENV === "production";
+  return { httpOnly: true, secure, sameSite: "lax", path: "/", priority: "high" };
+}
+
+/**
+ * A valid HMAC proves the payload was issued by this server, not that the
+ * account is still allowed to use it. Every API/page session read passes the
+ * stored account through this check so that an admin suspension and the
+ * users.session_valid_after revocation marker take effect immediately.
+ *
+ * Unknown or malformed standing data is handled by the caller as "no session"
+ * (fail closed); this function only answers for a concrete stored row.
+ */
+export function storedSessionAllows(
+  session: SessionPayload,
+  standing: StoredSessionStanding,
+  nowSec: number,
+): boolean {
+  if (suspensionActive(standing.status, standing.suspendedUntil, nowSec * 1000)) return false;
+  if (standing.sessionValidAfter != null) {
+    // A token minted before the revocation timestamp, or a legacy token with no
+    // issued-at claim, can no longer be trusted.
+    if (session.iat == null) return false;
+    if (!sessionStillValid(session.iat, standing.sessionValidAfter, nowSec * 1000)) return false;
+  }
+  return true;
 }
 
 export function newNonce(): string {

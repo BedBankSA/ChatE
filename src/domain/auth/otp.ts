@@ -64,24 +64,122 @@ export class FakeOtpProvider implements OtpProvider {
   }
 }
 
+/** Deadline for one carrier gateway call; a stalled gateway must not pin a request. */
+export const OTP_HTTP_TIMEOUT_MS = 10_000;
+
+const OTP_CODE_PATTERN = /^\d{6}$/;
+const OTP_E164_PATTERN = /^\+[1-9]\d{6,14}$/;
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+
+/** Configuration problems fail closed (503) so a broken deployment sends nothing. */
+function otpConfigError(): AppError {
+  return new AppError("مزود الرسائل غير مهيأ", "OTP_FAIL_CLOSED", 503);
+}
+
+/**
+ * One opaque provider failure (502) for every gateway outcome. The route answers
+ * the browser with its own fixed Arabic message, and the gateway response body,
+ * request id or carrier error text is never copied into an error, a response or
+ * a log line.
+ */
+function otpProviderError(): AppError {
+  return new AppError("تعذر إرسال رمز التحقق", "OTP_PROVIDER", 502);
+}
+
+function normalizeHostname(hostname: string): string {
+  return hostname.trim().toLowerCase().replace(/^\[/, "").replace(/\]$/, "").replace(/\.$/, "");
+}
+
+export function isLoopbackOtpHost(hostname: string): boolean {
+  const host = normalizeHostname(hostname);
+  return LOOPBACK_HOSTS.has(host) || host.endsWith(".localhost");
+}
+
+/**
+ * Validates the SMS gateway endpoint before any code can leave the process. The
+ * code-bearing request must travel over TLS in every real deployment; plain http
+ * is allowed only for a loopback host outside production (the local dev stub).
+ * Empty, malformed and credential-bearing URLs fail closed as configuration
+ * errors, so a misconfigured deployment never starts hashing codes it cannot
+ * deliver.
+ */
+export function validateOtpHttpUrl(raw: string | undefined, nodeEnv: string): string {
+  const candidate = raw?.trim() ?? "";
+  if (!candidate) throw otpConfigError();
+  let url: URL;
+  try {
+    url = new URL(candidate);
+  } catch {
+    throw otpConfigError();
+  }
+  // Credentials belong in OTP_HTTP_AUTHORIZATION, never in a URL that a proxy,
+  // an error page or a stack trace could print.
+  if (url.username || url.password) throw otpConfigError();
+  if (url.protocol === "https:") return url.href;
+  if (url.protocol === "http:" && nodeEnv !== "production" && isLoopbackOtpHost(url.hostname)) return url.href;
+  throw otpConfigError();
+}
+
+export type HttpOtpProviderOptions = {
+  /** Per-request deadline; defaults to OTP_HTTP_TIMEOUT_MS. Injectable for tests. */
+  timeoutMs?: number;
+  /** Environment used for the URL policy; defaults to the running process. */
+  nodeEnv?: string;
+};
+
 export class HttpOtpProvider implements OtpProvider {
   readonly name = "http";
+  private readonly url: string;
+  private readonly timeoutMs: number;
+
   constructor(
-    private readonly url: string,
+    url: string,
     private readonly authorization: string,
     private readonly fetchImpl: typeof fetch = fetch,
-  ) {}
+    options: HttpOtpProviderOptions = {},
+  ) {
+    this.url = validateOtpHttpUrl(url, options.nodeEnv ?? process.env.NODE_ENV ?? "development");
+    const timeoutMs = options.timeoutMs ?? OTP_HTTP_TIMEOUT_MS;
+    if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) throw otpConfigError();
+    this.timeoutMs = timeoutMs;
+  }
 
   async send(input: { to: string; code: string }): Promise<void> {
-    const response = await this.fetchImpl(this.url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        ...(this.authorization ? { authorization: this.authorization } : {}),
-      },
-      body: JSON.stringify(input),
-    });
-    if (!response.ok) throw new AppError("تعذر إرسال رمز التحقق", "OTP_PROVIDER", 502);
+    // Defense in depth: the route validates both values, so a payload outside
+    // the documented contract is a programming error and must not hit the wire.
+    if (!OTP_E164_PATTERN.test(input.to) || !OTP_CODE_PATTERN.test(input.code)) throw otpProviderError();
+    let response: Response;
+    try {
+      response = await this.fetchImpl(this.url, {
+        method: "POST",
+        // Never follow a redirect: an OTP code must not be replayed to a Location
+        // chosen by a misconfigured or compromised gateway.
+        redirect: "error",
+        cache: "no-store",
+        headers: {
+          "content-type": "application/json",
+          ...(this.authorization ? { authorization: this.authorization } : {}),
+        },
+        body: JSON.stringify({ to: input.to, code: input.code }),
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+    } catch {
+      // DNS/connect failure, deadline or a refused redirect. The original error
+      // is dropped so no provider or network detail can reach the caller.
+      throw otpProviderError();
+    }
+    // The gateway body is never trusted or surfaced; discard it on both paths so
+    // a large or streaming body cannot exhaust memory or keep a socket open.
+    await discardBody(response);
+    if (!response.ok) throw otpProviderError();
+  }
+}
+
+async function discardBody(response: Response): Promise<void> {
+  try {
+    await response.body?.cancel();
+  } catch {
+    // A body that already errored needs no cleanup; the status still decides.
   }
 }
 
@@ -92,12 +190,14 @@ export function createOtpProvider(env: {
   httpAuthorization?: string;
 }): OtpProvider {
   if (env.nodeEnv === "production") {
-    if (env.provider !== "http" || !env.httpUrl) {
-      throw new AppError("مزود الرسائل غير مهيأ", "OTP_FAIL_CLOSED", 503);
-    }
-    return new HttpOtpProvider(env.httpUrl, env.httpAuthorization ?? "");
+    // The fake provider is development-only, and a missing or plain-http endpoint
+    // is a deployment bug: both fail closed instead of falling back to a stub.
+    if (env.provider !== "http") throw otpConfigError();
+    return new HttpOtpProvider(env.httpUrl ?? "", env.httpAuthorization ?? "", fetch, { nodeEnv: env.nodeEnv });
   }
   if (env.provider === "fake") return new FakeOtpProvider();
-  if (env.provider === "http" && env.httpUrl) return new HttpOtpProvider(env.httpUrl, env.httpAuthorization ?? "");
-  throw new AppError("مزود الرسائل غير مهيأ", "OTP_FAIL_CLOSED", 503);
+  if (env.provider === "http") {
+    return new HttpOtpProvider(env.httpUrl ?? "", env.httpAuthorization ?? "", fetch, { nodeEnv: env.nodeEnv });
+  }
+  throw otpConfigError();
 }

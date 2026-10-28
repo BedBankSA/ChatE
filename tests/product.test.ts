@@ -36,7 +36,7 @@ import {
   openRouterChatBody,
   planDefaultEmbedding,
 } from "@/domain/models/endpoints";
-import { buildHaikuRequest, HAIKU_LIVE_CALLS_ENABLED, postHaiku } from "@/domain/models/haiku";
+import { buildHaikuRequest, haikuLiveCallsEnabled, postHaiku } from "@/domain/models/haiku";
 import { buildMaxQualityFree, completionCap, estimateTokens, interpretFinish } from "@/domain/models/max-quality";
 import { escapeHtml } from "@/domain/security/markdown";
 import { redact } from "@/domain/security/redact";
@@ -269,7 +269,8 @@ describe("MAX_QUALITY_FREE and Haiku", () => {
     expect(request.thinking).toEqual({ type: "adaptive" });
     expect(request).not.toHaveProperty("temperature");
     expect(buildMaxQualityFree(haiku).notes.join(" ")).toContain("Haiku");
-    expect(HAIKU_LIVE_CALLS_ENABLED).toBe(true);
+    expect(haikuLiveCallsEnabled({})).toBe(false);
+    expect(haikuLiveCallsEnabled({ HAIKU_LIVE_CALLS: "1" })).toBe(true);
     let postedUrl = "";
     let postedBody = "";
     const fetchImpl = (async (url: string, init?: RequestInit) => {
@@ -277,12 +278,13 @@ describe("MAX_QUALITY_FREE and Haiku", () => {
       postedBody = String(init?.body ?? "");
       return new Response(JSON.stringify({ content: [{ type: "text", text: "جواب" }] }), { status: 200 });
     }) as typeof fetch;
-    const sent = await postHaiku(request, { fetchImpl, apiKey: "test-key", allowLive: true });
+    const sent = await postHaiku(request, { fetchImpl, apiKey: "test-key", allowLive: true, env: { HAIKU_LIVE_CALLS: "1" } });
     expect(postedUrl).toBe("https://api.anthropic.com/v1/messages");
     expect(postedBody).toContain('"effort":"medium"');
     expect(postedBody).not.toContain("test-key");
     expect(sent.status).toBe(200);
-    await expect(postHaiku(request, { fetchImpl, apiKey: "test-key", allowLive: false })).rejects.toBeInstanceOf(AppError);
+    await expect(postHaiku(request, { fetchImpl, apiKey: "test-key", allowLive: false, env: { HAIKU_LIVE_CALLS: "1" } })).rejects.toBeInstanceOf(AppError);
+    await expect(postHaiku(request, { fetchImpl, apiKey: "test-key", allowLive: true, env: {} })).rejects.toBeInstanceOf(AppError);
     expect(interpretFinish({ finishReason: "max_tokens", visibleText: "" })).toBe("incomplete");
   });
 });

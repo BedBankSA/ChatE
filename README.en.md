@@ -6,9 +6,9 @@ Arabic web app for comparing models. One question, optional files, and answers s
 
 ## What it does
 
-The workspace at `/workspace` sends the question to the models the user selects, then reads the comparison from the server. Visible shortcuts: conversation (Gemma 4 31B), code (Flint), light (Gemma 4 26B), and a comparison of those three plus Claude Haiku 5.5. This is not a multi-turn chat transcript. `/history` is explanatory text and does not list saved rows.
+The workspace at `/workspace` sends the question to the models the user selects, then reads the comparison from the server. Visible shortcuts: conversation (Gemma 4 31B), code (Flint), light (Gemma 4 26B), and a comparison of those three plus Claude Haiku 5.5. This is not a multi-turn chat transcript. `/history` lists the signed-in user's saved comparisons newest first (20 per page) with a read-only detail page at `/history/[id]`, and `GET /api/history` returns the same rows for that account.
 
-File support is partial. Domain code detects type from bytes: PDF, PNG, JPEG, GIF, WebP, DOCX, XLSX, ZIP, OLE, text, JSON, CSV, TSV, Markdown, audio, and video. The picker posts file names only to `POST /api/uploads`. That route checks Turnstile and then returns 401. It does not store bytes. Creating a comparison passes empty attachments.
+File support is implemented. The picker sends real bytes as `multipart/form-data` to `POST /api/uploads` with a Turnstile token (action `upload`). The route requires the session first, then Turnstile, then stores bytes at `STORAGE_DIR/<userId>/<fileId>` with a server-generated path (0700 directory, 0600 file, atomic write); it detects the type from bytes (PDF, PNG, JPEG, GIF, WebP, DOCX, XLSX, ZIP, OLE, text, JSON, CSV, TSV, Markdown, audio, video), computes sha256, and inserts a `files` row with status `stored`. Limits: `MAX_FILE_BYTES` (default 25 MiB) per file, five files per request, 50 MiB total. PDF text is extracted with `unpdf`, DOCX with `mammoth`, and text formats with `decodeText`, then persisted in `documents`/`chunks` with `processing_version=v1`; images have no text and other types record an extraction failure. Comparison creation accepts `attachmentIds` (up to five ids owned by the session user), builds one shared evidence text for all models from the extracted text, sends images natively to image-capable models (≤ 5 MiB), and stores the ids in `evidence_snapshots.payload`. No public download URL exists.
 
 Sign-in uses the official Google Identity Services button. That button opens one account window, then the session is completed with an ID token and a nonce cookie. This identity flow does not use a Google client secret. Turnstile runs in `interaction-only` mode with `execution: execute`: no visible checkbox unless Cloudflare asks for interaction. The server verifies the token once and does not accept reuse.
 
@@ -39,13 +39,13 @@ Fill `.env.local` locally and do not commit it. If install fails on a TLS certif
 
 Do not start a second dev server if one is already listening on 3211. Do not use port 3000 for ChatE on this machine; that port is another application. The dev origin must be listed in Google Cloud as an authorized JavaScript origin: `http://localhost:3211`.
 
-`npm run build` and then `npm start` produce a production build. After the build, run `npm run check:bundle` to prove no server secret name or value reached the browser bundle. This repository has no public deployment.
+`npm run build` and then `npm start` produce a production build. After the build, run `npm run check:bundle` to prove no server secret name or value reached the browser bundle. This repository has no durable public deployment. CI lives in `.github/workflows/ci.yml` (Node 24: typegen/typecheck/lint/test/build/check:bundle, no secrets) and does not deploy. A temporary public demo URL can be produced with the Cloudflare quick-tunnel tool `scripts/deploy/public-demo.ps1` (evidence in `docs/evidence/public-deployment.md`); it is not production hosting and does not replace `docs/launch/DEPLOYMENT-RUNBOOK.md`.
 
 `npm run worker` opens the same SQLite file, applies pending migrations, and requeues stale claims. Its loop does not take comparisons and does not call a provider. Comparison execution runs inside the Next.js process.
 
 ## Database
 
-`npm run db:migrate` runs `scripts/migrate.ts`. The path comes from `SQLITE_PATH`, default `data/chate.sqlite`, resolved from the project root. The command creates the file when missing and applies every `migrations/*.sql` file in alphabetical order. Present now: `001_init.sql`, then `002_admin.sql`, then `003_security.sql` (Turnstile replay expiry index), then `004_stats.sql` (counter buckets and latency histogram), then `005_indexes.sql` (read-path indexes for runs, sessions, events, and audit lookups). Applied names are stored in `schema_migrations`. A second run prints `no pending migrations`. The first time the app server opens the database, it applies pending migrations too.
+`npm run db:migrate` runs `scripts/migrate.ts`. The path comes from `SQLITE_PATH`, default `data/chate.sqlite`, resolved from the project root. The command creates the file when missing and applies every `migrations/*.sql` file in alphabetical order. Present now: `001_init.sql`, then `002_admin.sql`, then `003_security.sql` (Turnstile replay expiry index), then `004_stats.sql` (counter buckets and latency histogram), then `005_indexes.sql` (read-path indexes for runs, sessions, events, and audit lookups), then `006_uploads.sql` (attachment read indexes for documents, chunks, extraction_jobs, and files). Applied names are stored in `schema_migrations`. A second run prints `no pending migrations`. The first time the app server opens the database, it applies pending migrations too.
 
 The operational file and its `-wal`, `-shm`, and `-journal` sidecars are gitignored. Do not delete `data/chate.sqlite` while preparing the repository.
 
@@ -75,9 +75,9 @@ Public values, not secrets:
 - `APP_URL`: `http://localhost:3211` in the example.
 - `TURNSTILE_EXPECTED_HOSTNAMES`
 - `SQLITE_PATH=data/chate.sqlite`
-- `STORAGE_DIR` and `DOWNLOAD_URL_TTL_SECONDS`
+- `STORAGE_DIR`: private file storage root (default `storage`, gitignored). `DOWNLOAD_URL_TTL_SECONDS` is not read yet because no public download route exists.
 - `USER_QUOTA_UNITS`, `SHARED_QUOTA_UNITS`, `MAX_USER_CONCURRENCY`, `MAX_GLOBAL_CONCURRENCY`, `MODEL_TIMEOUT_MS`, and `MAX_PROVIDER_RETRIES`
-- Upload limits: `MAX_FILE_BYTES`, `MAX_ZIP_ENTRIES`, `MAX_ZIP_DEPTH`, and `MAX_ZIP_UNCOMPRESSED_BYTES`
+- Enforced upload limits: `MAX_FILE_BYTES` (default 26214400), five files, and 50 MiB per request. `MAX_ZIP_ENTRIES`, `MAX_ZIP_DEPTH`, and `MAX_ZIP_UNCOMPRESSED_BYTES` are documented but not read yet.
 - `OTP_PROVIDER` and `OTP_HTTP_URL`
 - `ADMIN_GOOGLE_SUBS` and `ADMIN_EMAILS`
 - `RETENTION_COMPARISON_DAYS` and `RETENTION_FILE_DAYS`
@@ -92,7 +92,7 @@ Restricted, still listed, not called: Super VL, Lightning, Inkling, Inkling Smal
 
 `POST /api/comparisons` plans answer models only. Decision, evaluation, embedding, rerank, and speech models are not sent by that route even when the catalog says available. `openrouter/free` is outside the controlled comparison, and the OpenRouter sender rejects any id that does not end in `:free`. It is not a silent fallback.
 
-Claude Haiku 5.5 is `claude-haiku-5-5` through Anthropic directly at `https://api.anthropic.com/v1/messages`. Thinking is `thinking.type=adaptive` and effort is `output_config.effort=medium`. It is not OpenRouter, and it is not called in place of a free model that failed or is missing. Its cost is a separate Anthropic account from OpenRouter units. This document does not claim a live call succeeded.
+Claude Haiku 5.5 is `claude-haiku-5-5` through Anthropic directly at `https://api.anthropic.com/v1/messages`. Thinking is `thinking.type=adaptive` and effort is `output_config.effort=medium`. It is not OpenRouter, and it is not called in place of a free model that failed or is missing. Its cost is a separate Anthropic account from OpenRouter units. Live calls are off by default: Haiku is only sent when `HAIKU_LIVE_CALLS=1` is set explicitly after the owner approves spend. One successful live call was recorded once in release verification (2026-10-28) as documented under "Live evidence"; the environment gate remains the default.
 
 Quota: a comparison with N queued OpenRouter models reserves N OpenRouter units. Haiku is reserved on the `anthropic` provider account and is not drawn from the OpenRouter balance. Example defaults: `USER_QUOTA_UNITS=200` and `SHARED_QUOTA_UNITS=2000`. The numeric limits come from the same environment variables; the accounts are split by provider.
 
@@ -100,24 +100,36 @@ Three old embedding and rerank ids are rejected if requested and are not in the 
 
 ## License
 
-A license for this project has not been selected. Do not assume an open-source license because the repository exists. Third-party dependency licenses and the model providers' terms still apply.
+This project is licensed under the MIT License — see [LICENSE](LICENSE). Copyright (c) 2026 BedBankSA. Third-party dependency licenses and the model providers' terms still apply.
 
 ## Status
 
-Present in code, and covered by logic tests plus a temporary database file, without a live provider:
+Present in code, and covered by tests plus a local production server and live provider verification (see "Live evidence" below):
 
 - The official Google button opens one account window, and session completion works when the client id and `SESSION_SECRET` are set. The dev origin `http://localhost:3211` must be listed in Google Cloud.
-- Turnstile widget and server verification when the Turnstile secret is set.
-- Comparison planning, blocking a restricted model, and the Haiku request shape at effort `medium`.
-- SQLite migrations, quota reservation, and binding a comparison to the session user.
+- Turnstile widget and server verification when the Turnstile secret is set, including SQLite-backed replay rejection.
+- Comparison planning, blocking a restricted model, and the Haiku request shape at effort `medium`, with live Haiku calls gated behind `HAIKU_LIVE_CALLS=1`.
+- SQLite migrations, quota reservation, binding a comparison to the session user, and session validation against the stored account (immediate suspension/revocation).
 - Phone gate: without a verified number, a model call is not sent.
+- Phone verification is implemented: `POST /api/otp/send` and `POST /api/otp/verify` with a hashed challenge, send limits (3 per 15 minutes) and attempt limits (5), plus a two-step UI at `/profile/complete`. The HTTP provider contract is hardened and tested against a real local HTTP server; the owner only needs to set `OTP_PROVIDER=http` and an https `OTP_HTTP_URL` for a real SMS gateway.
+- Uploads: private byte storage, content-based detection, PDF/DOCX/text extraction, and `attachmentIds` wired into comparison creation with evidence/image delivery to models.
+- Real read-only comparison history: `/history`, `/history/[id]`, and `GET /api/history` with account isolation.
+- `GET /api/health` liveness/readiness probe (database only, no sensitive data), and `Cache-Control: no-store` on comparison responses.
+- MIT license, secret-free CI in `.github/workflows/ci.yml`, and a temporary public-demo tool at `scripts/deploy/public-demo.ps1`.
+- Dependency-free browser check tooling: `scripts/qa/run-e2e.mjs` over the Chrome DevTools Protocol, a local mock-provider server `scripts/dev/mock-externals.cjs`, and a release E2E gate at `scripts/qa/verify-release.mjs`.
 
 Not done:
 
 - Admin dashboard. `/admin` is gated by the stored Google session and the `ADMIN_GOOGLE_SUBS`/`ADMIN_EMAILS` allowlist, never by an email typed into the URL. It shows local counters (questions, calls, failures, tokens, files, storage), a user table with no question or answer text, the audit log, and the last four characters of secret versions. `GET /api/admin/overview` returns 401/403 or the admin payload, and `POST /api/admin/users` accepts suspend, restore, or quota changes only with a matching origin and session CSRF. Counters are written from the comparison path into `operation_stats`, `operation_buckets`, and `latency_histogram` (`004_stats.sql`). No presence heartbeat is wired, so the two presence cards report "unavailable" instead of a misleading zero. The page rotates no secrets and sends no external alert.
-- Real SMS is not configured. The example sets `OTP_PROVIDER=fake`, and production rejects anything other than `http`. Even with `OTP_PROVIDER=http` and a send URL, `POST /api/otp/send` reports that a real send is not enabled. Model calls stay blocked until the phone is verified.
-- No public deployment.
-- This preparation does not claim a live OpenRouter or Anthropic success. No test observed here performed one.
-- Uploading, storing, and attaching files to the question is unfinished. The `storage` directory is configured and gitignored.
-- Comparison history and account deletion are page text, with no route that performs deletion.
-- There is no Playwright/E2E suite in this repository; the `test:e2e` script was removed because it picked up Vitest files instead of browser tests.
+- Real SMS is not configured in this environment; no carrier SMS was sent. What is proven is the real HTTP round-trip: route → `HttpOtpProvider` → local HTTP server → captured code → verify → `phone_verified_at`.
+- No durable public deployment, domain, production TLS, or payments. The temporary Cloudflare quick-tunnel demo is presentation tooling, not production hosting (B2).
+- No live call is claimed beyond what is recorded under "Live evidence" with a named provider and date.
+- Uploads are implemented, but a public download route, file deletion, and `RETENTION_FILE_DAYS` enforcement are not; the code does not read `DOWNLOAD_URL_TTL_SECONDS` or `MAX_ZIP_*` yet.
+- Account deletion has no route yet, and `retention_settings` is not enforced by a periodic worker.
+- There is no Playwright suite; browser checking in this repository uses the in-repo CDP scripts under `scripts/qa`.
+
+## Live evidence
+
+- **Live provider calls (2026-10-28):** a full comparison ran through a local production server against the real network. `claude-haiku-5-5` returned a real completion (433 input / 6 output tokens, 1935 ms, $0.000046), and `cohere/north-mini-code:free` returned a real completion (178/152 tokens, 2678 ms). Two other free models failed with provider 429 and did not prevent the others from completing. Raw evidence: `docs/evidence/live-provider-calls.md` and `docs/evidence/release-verification-2026-10-28T14-06-54-260Z.json`. Stated limits: Turnstile passed via a QA token rather than a browser widget, the session was seeded rather than Google sign-in, and OTP used a local HTTP stub rather than a carrier SMS gateway.
+- **Release verification (mock + live):** `scripts/qa/verify-release.mjs` runs 14 probes (13 PASS + 1 SKIP for optional browser smoke) in both modes: health and headers, catalog, anonymous 401s, Turnstile (missing/bad/replayed), real loopback-HTTP OTP through `phone_verified_at`, real txt/pdf/png uploads, an attachment comparison with four independently settled runs, database evidence binding, `/history` list and `/history/[id]` detail, IDOR isolation, and secret redaction. Raw evidence: `docs/evidence/release-verification-*.json`.
+- **CI:** `.github/workflows/ci.yml` runs typegen/typecheck/lint/test/build/check:bundle with no secrets. Durable public deployment remains unimplemented (B2); the temporary demo is not counted as a deployment.

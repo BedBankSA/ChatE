@@ -3,7 +3,15 @@ import { AppError } from "@/domain/errors";
 export const HAIKU_MODEL_ID = "claude-haiku-5-5";
 export const HAIKU_URL = "https://api.anthropic.com/v1/messages";
 export const HAIKU_EFFORT = "medium" as const;
-export const HAIKU_LIVE_CALLS_ENABLED = true;
+/**
+ * Live Anthropic calls are off unless the operator explicitly opts in.
+ * Docs (architecture.md, launch-and-secret-rotation.md) state this build does
+ * not send Haiku live; the flag keeps code and docs aligned and prevents an
+ * accidental paid call from a stray comparison submission.
+ */
+export function haikuLiveCallsEnabled(env: Record<string, string | undefined> = process.env): boolean {
+  return env.HAIKU_LIVE_CALLS === "1";
+}
 
 export type HaikuText = { type: "text"; text: string };
 export type HaikuImage = {
@@ -65,9 +73,9 @@ export function haikuCostUsd(usage: {
 
 export async function postHaiku(
   body: HaikuBody,
-  deps: { fetchImpl: typeof fetch; apiKey: string; allowLive: boolean },
+  deps: { fetchImpl: typeof fetch; apiKey: string; allowLive: boolean; env?: Record<string, string | undefined> },
 ): Promise<{ status: number; body: unknown }> {
-  if (!HAIKU_LIVE_CALLS_ENABLED || !deps.allowLive) {
+  if (!haikuLiveCallsEnabled(deps.env) || !deps.allowLive) {
     throw new AppError("استدعاء Haiku الحي متوقف في هذا البناء", "HAIKU_LIVE_DISABLED", 409);
   }
   if (!deps.apiKey.trim()) throw new AppError("مفتاح Anthropic غير مهيأ على الخادم.", "ANTHROPIC_UNCONFIGURED", 503);

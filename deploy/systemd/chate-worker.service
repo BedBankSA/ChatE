@@ -1,0 +1,44 @@
+# ChatE worker process — /etc/systemd/system/chate-worker.service
+# Note (honest scope): scripts/worker.ts only applies pending migrations, requeues
+# stale job claims older than 15 minutes, then idles. Comparison execution runs in
+# the Next.js web process (src/server/comparisons/execute.ts). The worker still
+# matters: it recovers jobs abandoned by a crashed web process.
+[Unit]
+Description=ChatE worker (SQLite migrations + stale claim requeue)
+Documentation=file:/opt/chate/docs/launch/DEPLOYMENT-RUNBOOK.md
+After=network-online.target chate-web.service
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=10
+
+[Service]
+Type=simple
+User=chate
+Group=chate
+WorkingDirectory=/opt/chate
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+EnvironmentFile=/etc/chate/chate.env
+ExecStart=/usr/bin/node /opt/chate/node_modules/tsx/dist/cli.mjs scripts/worker.ts
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+KillSignal=SIGTERM
+UMask=0077
+LimitNOFILE=65535
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/chate /opt/chate/.next
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryMax=256M
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=chate-worker
+
+[Install]
+WantedBy=multi-user.target

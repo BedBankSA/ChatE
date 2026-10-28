@@ -1,7 +1,7 @@
 import { AppError } from "@/domain/errors";
 import { retryDecision } from "@/domain/quota/reserve";
 import { acceptReturnedModel } from "@/domain/models/endpoints";
-import { HAIKU_MODEL_ID, HAIKU_URL, postHaiku, type HaikuBody } from "@/domain/models/haiku";
+import { HAIKU_MODEL_ID, HAIKU_URL, haikuLiveCallsEnabled, postHaiku, type HaikuBody } from "@/domain/models/haiku";
 import { haikuCostUsd } from "@/domain/models/haiku";
 import { interpretFinish } from "@/domain/models/max-quality";
 
@@ -29,6 +29,8 @@ export type DispatchDeps = {
   openRouterKey?: string;
   anthropicKey?: string;
   appUrl: string;
+  /** Override for tests; defaults to process.env when omitted. */
+  env?: Record<string, string | undefined>;
 };
 
 export async function dispatchModel(
@@ -74,7 +76,7 @@ async function dispatchHaiku(
   if (!deps.anthropicKey?.trim()) return failed(false, "مفتاح Anthropic غير مهيأ على الخادم.", "ANTHROPIC_UNCONFIGURED");
   const started = Date.now();
   try {
-    const response = await postHaiku(body, { fetchImpl: deps.fetchImpl, apiKey: deps.anthropicKey, allowLive: true });
+    const response = await postHaiku(body, { fetchImpl: deps.fetchImpl, apiKey: deps.anthropicKey, allowLive: haikuLiveCallsEnabled(deps.env), env: deps.env });
     return interpretAnthropic(modelId, response.status, response.body, Date.now() - started, 1);
   } catch (error) {
     if (error instanceof AppError) return failed(false, error.message, error.code);
