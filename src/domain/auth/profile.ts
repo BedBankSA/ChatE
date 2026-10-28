@@ -11,9 +11,15 @@ export type Profile = {
 };
 
 export function normalizePhone(country: string, nationalNumber: string): { ok: true; e164: string } | { ok: false } {
-  const parsed = parsePhoneNumberFromString(nationalNumber, country as CountryCode);
-  if (!parsed?.isValid()) return { ok: false };
-  return { ok: true, e164: parsed.number };
+  if (!/^[A-Za-z]{2}$/.test(country)) return { ok: false };
+  try {
+    const parsed = parsePhoneNumberFromString(nationalNumber, country.toUpperCase() as CountryCode);
+    if (!parsed?.isValid()) return { ok: false };
+    return { ok: true, e164: parsed.number };
+  } catch {
+    // An unknown region code or malformed input must not throw into the route.
+    return { ok: false };
+  }
 }
 
 export function withUnverifiedPhone(profile: Profile, e164: string): Profile {

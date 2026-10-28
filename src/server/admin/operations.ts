@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
-import { hourBucket, latencyEdge, PRESENCE_TTL_MS } from "@/domain/admin/measure";
-import { redactErrorCode } from "@/domain/admin/privacy";
+import { hourBucket, latencyEdge } from "@/domain/admin/measure";
+import { PRESENCE_TTL_MS } from "@/domain/admin/presence";
+import { redactErrorCode } from "@/domain/admin/counters";
 import { changeCount, numberField } from "@/server/db/rows";
 import { touchActivity } from "@/server/account-access";
 
@@ -126,7 +127,8 @@ export function recordModelInvocation(db: DatabaseSync, input: {
     ttftMs: input.ttftMs,
     completionMs: input.completionMs,
     costUsd: input.costUsd,
-    quotaUnits: 1,
+    // A policy-blocked run never reached the provider, so it consumed no unit.
+    quotaUnits: input.networkAttempts > 0 ? 1 : 0,
     errorCode: input.errorCode,
   });
   const extra = Math.max(0, input.networkAttempts - 1);
@@ -138,7 +140,9 @@ export function recordModelInvocation(db: DatabaseSync, input: {
       provider: input.provider,
       operationType: "extra_attempt",
       occurredAt: input.occurredAt,
-      status: "recorded",
+      // The schema only accepts the operation status vocabulary; an extra
+      // attempt carries the outcome of the generation it belonged to.
+      status: input.succeeded ? "succeeded" : "failed",
       quotaUnits: null,
     });
   }

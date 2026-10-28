@@ -42,6 +42,7 @@ export function Workspace() {
   const [asked, setAsked] = useState("");
   const sending = useRef(false);
   const pollRef = useRef<number | null>(null);
+  const pollBusy = useRef(false);
 
   useEffect(() => {
     void fetch("/api/models")
@@ -52,6 +53,8 @@ export function Workspace() {
 
   useEffect(() => () => {
     if (pollRef.current) window.clearInterval(pollRef.current);
+    pollRef.current = null;
+    pollBusy.current = false;
   }, []);
 
   function toggle(id: string) {
@@ -80,16 +83,41 @@ export function Workspace() {
     return body;
   }
 
+  function stopPolling() {
+    if (pollRef.current) window.clearInterval(pollRef.current);
+    pollRef.current = null;
+    pollBusy.current = false;
+  }
+
   async function refreshComparison(id: string) {
-    const response = await fetch(`/api/comparisons/${id}`);
+    const response = await fetch(`/api/comparisons/${id}`, { signal: AbortSignal.timeout(15_000) });
     const body: unknown = await response.json().catch(() => null);
     if (!response.ok) throw new Error(comparisonFailureMessage(body));
     const next = comparisonRuns(body);
     setRuns(next);
-    if (runsSettled(next) && pollRef.current) {
-      window.clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
+    if (runsSettled(next)) stopPolling();
+  }
+
+  function startPolling(id: string) {
+    stopPolling();
+    let failures = 0;
+    pollRef.current = window.setInterval(() => {
+      if (pollBusy.current) return;
+      pollBusy.current = true;
+      void refreshComparison(id)
+        .then(() => {
+          failures = 0;
+        })
+        .catch((error: unknown) => {
+          failures += 1;
+          setMessage(error instanceof Error ? error.message : REQUEST_FAILED_MESSAGE);
+          // Give up after three consecutive failures instead of polling forever.
+          if (failures >= 3) stopPolling();
+        })
+        .finally(() => {
+          pollBusy.current = false;
+        });
+    }, 1200);
   }
 
   async function send(answerModelIds: string[]) {
@@ -114,14 +142,7 @@ export function Workspace() {
       const next = comparisonRuns(body);
       setRuns(next);
       setMessage(id ? "أُرسلت المقارنة." : SENDING_MESSAGE);
-      if (id && !runsSettled(next)) {
-        if (pollRef.current) window.clearInterval(pollRef.current);
-        pollRef.current = window.setInterval(() => {
-          void refreshComparison(id).catch((error: unknown) => {
-            setMessage(error instanceof Error ? error.message : REQUEST_FAILED_MESSAGE);
-          });
-        }, 1200);
-      }
+      if (id && !runsSettled(next)) startPolling(id);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : REQUEST_FAILED_MESSAGE);
     } finally {
@@ -216,8 +237,7 @@ export function Workspace() {
       <div style={{ display: "flex", gap: "0.6rem" }}>
         <button className="btn" type="button" onClick={() => void send(selected)}>إرسال</button>
         <button className="btn secondary" type="button" onClick={() => {
-          if (pollRef.current) window.clearInterval(pollRef.current);
-          pollRef.current = null;
+          stopPolling();
           setMessage("أُوقف العرض المحلي. قد لا يتوقف المزود فورًا.");
         }}>إيقاف</button>
       </div>

@@ -442,6 +442,73 @@ button, input, textarea, select {
   }
 }
 
+.admin-board {
+  width: min(1120px, calc(100% - 2rem));
+  display: grid;
+  gap: 1rem;
+  padding-bottom: 3rem;
+}
+
+.admin-board h1,
+.admin-board h2,
+.admin-board h3 { margin: 0; }
+
+.admin-board h3 { font-size: 1rem; }
+
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.metric-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.metric-grid .card {
+  display: grid;
+  gap: 0.2rem;
+  padding: 16px;
+}
+
+.metric-value {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.table-wrap { overflow-x: auto; }
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.5rem;
+  text-align: start;
+  vertical-align: top;
+}
+
+.admin-table td.wrap { white-space: normal; min-width: 8rem; }
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.row-actions form { margin: 0; }
+
+.quota-field { width: 6.5rem; min-height: 44px; }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { animation: none !important; transition: none !important; }

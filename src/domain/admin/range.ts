@@ -52,12 +52,6 @@ export function providerDayWindow(now: Date): { from: string; to: string; resetU
   };
 }
 
-export function hourBucket(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) throw new Error("TIME");
-  return `${date.toISOString().slice(0, 13)}:00:00.000Z`;
-}
-
 function riyadhStart(day: string): string {
   return new Date(`${day}T00:00:00+03:00`).toISOString();
 }

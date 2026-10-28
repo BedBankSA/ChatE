@@ -11,7 +11,13 @@ function readCookie(request: Request, name: string): string | null {
   const header = request.headers.get("cookie") ?? "";
   for (const part of header.split(";")) {
     const [key, ...rest] = part.trim().split("=");
-    if (key === name) return decodeURIComponent(rest.join("="));
+    if (key !== name) continue;
+    const raw = rest.join("=");
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      return raw;
+    }
   }
   return null;
 }
@@ -54,11 +60,13 @@ export async function POST(request: Request) {
   } catch {
     return jsonError("تعذر حفظ الحساب.", "account_store", 500);
   }
+  const nowSec = Math.floor(Date.now() / 1000);
   const token = signSession(
     {
       userId: profile.googleSub,
       googleSub: profile.googleSub,
-      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 14,
+      exp: nowSec + 60 * 60 * 24 * 14,
+      iat: nowSec,
       csrf: newNonce(),
     },
     sessionSecret,

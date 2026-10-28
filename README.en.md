@@ -39,13 +39,13 @@ Fill `.env.local` locally and do not commit it. If install fails on a TLS certif
 
 Do not start a second dev server if one is already listening on 3211. Do not use port 3000 for ChatE on this machine; that port is another application. The dev origin must be listed in Google Cloud as an authorized JavaScript origin: `http://localhost:3211`.
 
-`npm run build` and then `npm start` produce a production build. This repository has no public deployment.
+`npm run build` and then `npm start` produce a production build. After the build, run `npm run check:bundle` to prove no server secret name or value reached the browser bundle. This repository has no public deployment.
 
 `npm run worker` opens the same SQLite file, applies pending migrations, and requeues stale claims. Its loop does not take comparisons and does not call a provider. Comparison execution runs inside the Next.js process.
 
 ## Database
 
-`npm run db:migrate` runs `scripts/migrate.ts`. The path comes from `SQLITE_PATH`, default `data/chate.sqlite`, resolved from the project root. The command creates the file when missing and applies every `migrations/*.sql` file in alphabetical order. Present now: `001_init.sql`, then `002_admin.sql`. Applied names are stored in `schema_migrations`. A second run prints `no pending migrations`. The first time the app server opens the database, it applies pending migrations too.
+`npm run db:migrate` runs `scripts/migrate.ts`. The path comes from `SQLITE_PATH`, default `data/chate.sqlite`, resolved from the project root. The command creates the file when missing and applies every `migrations/*.sql` file in alphabetical order. Present now: `001_init.sql`, then `002_admin.sql`, then `003_security.sql` (Turnstile replay expiry index), then `004_stats.sql` (counter buckets and latency histogram), then `005_indexes.sql` (read-path indexes for runs, sessions, events, and audit lookups). Applied names are stored in `schema_migrations`. A second run prints `no pending migrations`. The first time the app server opens the database, it applies pending migrations too.
 
 The operational file and its `-wal`, `-shm`, and `-journal` sidecars are gitignored. Do not delete `data/chate.sqlite` while preparing the repository.
 
@@ -114,10 +114,10 @@ Present in code, and covered by logic tests plus a temporary database file, with
 
 Not done:
 
-- Admin dashboard. `/admin` is a static paragraph, and `GET /api/admin/overview` always returns 401 without reading a session. No page shows users, usage, or API keys. Unwired server code exists: an account query returns name, email, phone, city, and counters without question text; `002_admin.sql` adds operation tables without message text or file names; the secret-status view exposes the last four characters. `stripPrivateKeys` drops keys such as `question` and `output_text`. `npm test` does not cover these files, so the rule and the dashboard are not done.
+- Admin dashboard. `/admin` is gated by the stored Google session and the `ADMIN_GOOGLE_SUBS`/`ADMIN_EMAILS` allowlist, never by an email typed into the URL. It shows local counters (questions, calls, failures, tokens, files, storage), a user table with no question or answer text, the audit log, and the last four characters of secret versions. `GET /api/admin/overview` returns 401/403 or the admin payload, and `POST /api/admin/users` accepts suspend, restore, or quota changes only with a matching origin and session CSRF. Counters are written from the comparison path into `operation_stats`, `operation_buckets`, and `latency_histogram` (`004_stats.sql`). No presence heartbeat is wired, so the two presence cards report "unavailable" instead of a misleading zero. The page rotates no secrets and sends no external alert.
 - Real SMS is not configured. The example sets `OTP_PROVIDER=fake`, and production rejects anything other than `http`. Even with `OTP_PROVIDER=http` and a send URL, `POST /api/otp/send` reports that a real send is not enabled. Model calls stay blocked until the phone is verified.
 - No public deployment.
 - This preparation does not claim a live OpenRouter or Anthropic success. No test observed here performed one.
 - Uploading, storing, and attaching files to the question is unfinished. The `storage` directory is configured and gitignored.
 - Comparison history and account deletion are page text, with no route that performs deletion.
-- Playwright tests are not part of the checks run for this preparation.
+- There is no Playwright/E2E suite in this repository; the `test:e2e` script was removed because it picked up Vitest files instead of browser tests.

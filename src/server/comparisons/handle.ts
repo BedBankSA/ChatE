@@ -2,6 +2,7 @@ import { planRuns } from "@/domain/comparison/plan";
 import { parseComparisonBody } from "@/domain/comparison/input";
 import { modelUseBlock, otpProviderConfigured } from "@/domain/auth/model-gate";
 import { publicError } from "@/domain/errors";
+import { recordAcceptedComparison } from "@/server/admin/operations";
 import { readStoredProfile } from "@/server/db/profiles";
 import { readQuotaLimits } from "@/server/db/quota";
 import { getDatabase } from "@/server/db/runtime";
@@ -68,6 +69,18 @@ export async function postComparison(request: Request): Promise<Response> {
     return jsonError("تعذر حفظ المقارنة.", "store", 500);
   }
   if (!created.ok) return jsonError(created.message, created.code, 429);
+  if (!created.duplicate) {
+    try {
+      recordAcceptedComparison(db, {
+        userId: session.userId,
+        comparisonId: created.comparison.id,
+        occurredAt: new Date().toISOString(),
+      });
+    } catch {
+      // Counters are best effort; a statistics failure must not fail an
+      // otherwise accepted comparison.
+    }
+  }
   if (!created.duplicate || created.comparison.status === "queued" || created.comparison.status === "running") {
     scheduleComparison(created.comparison.id);
   }

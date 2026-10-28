@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { contentSecurityPolicy } from "@/domain/security/headers";
 
 const root = process.cwd();
@@ -92,13 +92,17 @@ describe("development CSP", () => {
 
 describe("google login routes", () => {
   beforeEach(() => {
-    process.env.GOOGLE_CLIENT_ID = "test-google-client";
-    process.env.SESSION_SECRET = "test-session-secret";
-    process.env.TURNSTILE_SECRET_KEY = "test-turnstile-secret";
-    process.env.TURNSTILE_EXPECTED_HOSTNAMES = "localhost";
-    process.env.NODE_ENV = "test";
-    process.env.APP_URL = "http://localhost:3211";
+    vi.stubEnv("GOOGLE_CLIENT_ID", "test-google-client");
+    vi.stubEnv("SESSION_SECRET", "test-session-secret");
+    vi.stubEnv("TURNSTILE_SECRET_KEY", "test-turnstile-secret");
+    vi.stubEnv("TURNSTILE_EXPECTED_HOSTNAMES", "localhost");
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("APP_URL", "http://localhost:3211");
     vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("issues an HttpOnly nonce without a Turnstile token", async () => {

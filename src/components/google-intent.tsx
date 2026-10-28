@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { issueTurnstileToken } from "@/components/turnstile";
 
@@ -91,6 +92,7 @@ async function fetchNonce(): Promise<string> {
 export function GoogleIntentButton() {
   const hostRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const host = hostRef.current;
@@ -100,6 +102,40 @@ export function GoogleIntentButton() {
     const report = (text: string) => {
       if (active) setMessage(text);
     };
+
+    async function finish(credential: string | undefined) {
+      if (!credential) {
+        setMessage("لم يصل رمز Google.");
+        return;
+      }
+      let turnstileToken = "";
+      try {
+        turnstileToken = await takeLoginTurnstile();
+      } catch {
+        setMessage(RETRY);
+        return;
+      }
+      try {
+        const response = await fetch("/api/auth/google", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ credential, "cf-turnstile-response": turnstileToken }),
+        });
+        const body = (await response.json()) as {
+          data?: { name?: string };
+          error?: { message?: string };
+        };
+        if (!response.ok) {
+          setMessage(body.error?.message ?? "تعذر إكمال الدخول");
+          return;
+        }
+        setMessage(`تم الدخول: ${body.data?.name || "حساب Google"}`);
+        router.push("/profile/complete");
+        router.refresh();
+      } catch {
+        setMessage("تعذر إكمال الدخول");
+      }
+    }
 
     async function mountOfficialButton() {
       if (!CLIENT_ID) {
@@ -147,40 +183,7 @@ export function GoogleIntentButton() {
     return () => {
       active = false;
     };
-  }, []);
-
-  async function finish(credential: string | undefined) {
-    if (!credential) {
-      setMessage("لم يصل رمز Google.");
-      return;
-    }
-    let turnstileToken = "";
-    try {
-      turnstileToken = await takeLoginTurnstile();
-    } catch {
-      setMessage(RETRY);
-      return;
-    }
-    try {
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ credential, "cf-turnstile-response": turnstileToken }),
-      });
-      const body = (await response.json()) as {
-        data?: { name?: string };
-        error?: { message?: string };
-      };
-      if (!response.ok) {
-        setMessage(body.error?.message ?? "تعذر إكمال الدخول");
-        return;
-      }
-      setMessage(`تم الدخول: ${body.data?.name || "حساب Google"}`);
-      window.location.assign("/profile/complete");
-    } catch {
-      setMessage("تعذر إكمال الدخول");
-    }
-  }
+  }, [router]);
 
   return (
     <div style={{ display: "grid", gap: "0.5rem", width: "fit-content" }}>

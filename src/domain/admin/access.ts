@@ -1,3 +1,4 @@
+import { sessionStillValid, suspensionActive } from "@/domain/admin/suspension";
 import { isAdmin } from "@/domain/auth/access";
 
 export const FRESH_SESSION_MS = 15 * 60 * 1000;
@@ -29,4 +30,12 @@ export function sessionIsFresh(iat: number | undefined, nowMs: number): boolean 
   if (iat == null) return false;
   const age = nowMs - iat * 1000;
   return age >= 0 && age <= FRESH_SESSION_MS;
+}
+
+export function isSuspended(status: string, suspendedUntil: string | null, nowIso: string): boolean {
+  return suspensionActive(status, suspendedUntil, Date.parse(nowIso));
+}
+
+export function sessionEnded(sessionValidAfter: string | null, issuedAt: number | undefined, nowSec: number): boolean {
+  return !sessionStillValid(issuedAt, sessionValidAfter, nowSec * 1000);
 }

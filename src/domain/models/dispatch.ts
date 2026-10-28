@@ -10,6 +10,8 @@ const CALL_TIMEOUT_MS = 120_000;
 
 export type DispatchResult = {
   attempted: boolean;
+  /** Provider network calls made, including 429 retries. Zero when policy blocked the request. */
+  attempts: number;
   status: "completed" | "incomplete" | "failed";
   outputText: string;
   message: string | null;
@@ -73,10 +75,10 @@ async function dispatchHaiku(
   const started = Date.now();
   try {
     const response = await postHaiku(body, { fetchImpl: deps.fetchImpl, apiKey: deps.anthropicKey, allowLive: true });
-    return interpretAnthropic(modelId, response.status, response.body, Date.now() - started);
+    return interpretAnthropic(modelId, response.status, response.body, Date.now() - started, 1);
   } catch (error) {
     if (error instanceof AppError) return failed(false, error.message, error.code);
-    return failed(true, "تعذر الاتصال بـ Anthropic.", "ANTHROPIC_UNAVAILABLE");
+    return failed(true, "تعذر الاتصال بـ Anthropic.", "ANTHROPIC_UNAVAILABLE", Date.now() - started, 1);
   }
 }
 
@@ -102,8 +104,10 @@ async function send(
   const started = Date.now();
   let lastStatus = 0;
   let lastBody: unknown = null;
+  let attempts = 0;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     let response: Response;
+    attempts += 1;
     try {
       response = await deps.fetchImpl(endpoint, {
         method: "POST",
@@ -117,7 +121,7 @@ async function send(
         signal: AbortSignal.timeout(CALL_TIMEOUT_MS),
       });
     } catch {
-      return failed(attempt > 0, "تعذر الاتصال بالمزود المجاني.", "PROVIDER_UNAVAILABLE", Date.now() - started);
+      return failed(true, "تعذر الاتصال بالمزود المجاني.", "PROVIDER_UNAVAILABLE", Date.now() - started, attempts);
     }
     lastStatus = response.status;
     lastBody = await response.json().catch(() => null);
@@ -126,24 +130,25 @@ async function send(
     if (!decision.retry) break;
     await wait(decision.waitMs);
   }
-  if (provider === "openrouter") return interpretOpenRouter(modelId, lastStatus, lastBody, Date.now() - started);
-  return failed(true, "تعذر رد المزود.", "PROVIDER_ERROR", Date.now() - started);
+  if (provider === "openrouter") return interpretOpenRouter(modelId, lastStatus, lastBody, Date.now() - started, attempts);
+  return failed(true, "تعذر رد المزود.", "PROVIDER_ERROR", Date.now() - started, attempts);
 }
 
-function interpretOpenRouter(modelId: string, status: number, body: unknown, completionMs: number): DispatchResult {
-  if (status !== 200) return failed(true, providerFailure(status, body), "PROVIDER_ERROR", completionMs);
+function interpretOpenRouter(modelId: string, status: number, body: unknown, completionMs: number, attempts: number): DispatchResult {
+  if (status !== 200) return failed(true, providerFailure(status, body), failureCode(status), completionMs, attempts);
   const record = asRecord(body);
   const choice = Array.isArray(record?.choices) ? asRecord(record.choices[0]) : null;
   const message = asRecord(choice?.message);
   const text = messageText(message?.content);
   const returned = typeof record?.model === "string" ? record.model : null;
   const accepted = acceptReturnedModel(modelId, returned);
-  if (!accepted.ok) return failed(true, "أعاد المزود معرفًا مختلفًا عن النموذج المختار.", "unexpected_model", completionMs);
+  if (!accepted.ok) return failed(true, "أعاد المزود معرفًا مختلفًا عن النموذج المختار.", "unexpected_model", completionMs, attempts);
   const finish = typeof choice?.finish_reason === "string" ? choice.finish_reason : null;
   const usage = asRecord(record?.usage);
   const verdict = interpretFinish({ finishReason: finish, visibleText: text });
   return {
     attempted: true,
+    attempts,
     status: verdict === "incomplete" ? "incomplete" : "completed",
     outputText: text,
     message: verdict === "incomplete" ? "انتهت ميزانية الإكمال قبل اكتمال النص الظاهر." : null,
@@ -157,12 +162,12 @@ function interpretOpenRouter(modelId: string, status: number, body: unknown, com
   };
 }
 
-function interpretAnthropic(modelId: string, status: number, body: unknown, completionMs: number): DispatchResult {
-  if (status !== 200) return failed(true, providerFailure(status, body), "ANTHROPIC_ERROR", completionMs);
+function interpretAnthropic(modelId: string, status: number, body: unknown, completionMs: number, attempts: number): DispatchResult {
+  if (status !== 200) return failed(true, providerFailure(status, body), failureCode(status), completionMs, attempts);
   const record = asRecord(body);
   const returned = typeof record?.model === "string" ? record.model : null;
   if (returned && returned !== modelId) {
-    return failed(true, "أعاد Anthropic معرفًا مختلفًا عن النموذج المختار.", "unexpected_model", completionMs);
+    return failed(true, "أعاد Anthropic معرفًا مختلفًا عن النموذج المختار.", "unexpected_model", completionMs, attempts);
   }
   const text = anthropicText(record?.content);
   const finish = typeof record?.stop_reason === "string" ? record.stop_reason : null;
@@ -179,6 +184,7 @@ function interpretAnthropic(modelId: string, status: number, body: unknown, comp
     : null;
   return {
     attempted: true,
+    attempts,
     status: verdict === "incomplete" ? "incomplete" : "completed",
     outputText: text,
     message: verdict === "incomplete" ? "انتهت ميزانية الإكمال قبل اكتمال النص الظاهر." : null,
@@ -190,6 +196,13 @@ function interpretAnthropic(modelId: string, status: number, body: unknown, comp
     costUsd: cost,
     completionMs,
   };
+}
+
+function failureCode(status: number): string {
+  if (status === 429) return "RATE_LIMIT";
+  if (status === 401 || status === 403) return "AUTH";
+  if (status >= 500) return "SERVICE";
+  return "PROVIDER_ERROR";
 }
 
 function providerFailure(status: number, body: unknown): string {
@@ -225,9 +238,11 @@ function failed(
   message: string,
   errorCode: string,
   completionMs: number | null = null,
+  attempts = attempted ? 1 : 0,
 ): DispatchResult {
   return {
     attempted,
+    attempts,
     status: "failed",
     outputText: "",
     message,

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { cookies } from "next/headers";
 import Link from "next/link";
+import { currentAdmin } from "@/server/admin/current";
 import { readGoogleSession } from "@/server/google-session";
 import "./globals.css";
 
@@ -21,6 +22,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const theme = (await cookies()).get("chate_theme")?.value === "dark" ? "dark" : "light";
   const session = await readGoogleSession();
+  const admin = session ? await currentAdmin() : null;
   const nextThemeLabel = theme === "dark" ? "التبديل إلى المظهر الفاتح" : "التبديل إلى المظهر الداكن";
   return (
     <html lang="ar" dir="rtl" data-theme={theme} className={`${plexArabic.variable} ${plexArabic.className}`}>
@@ -40,6 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </div>
           <nav className="site-header-nav" aria-label="التنقل">
             {session ? <Link href="/workspace">مساحة العمل</Link> : null}
+            {admin ? <Link href="/admin">الإدارة</Link> : null}
             <Link href="/history">السجل</Link>
             <Link href="/privacy">الخصوصية</Link>
           </nav>

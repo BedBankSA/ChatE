@@ -18,6 +18,10 @@ export function removeSecretValues(json: string, secrets: string[]): string {
   for (const secret of secrets) {
     if (!secret || secret.length < 8) continue;
     text = text.split(secret).join("[redacted]");
+    // A secret carrying quotes or backslashes is JSON-escaped in the payload;
+    // scrub that form too so the value cannot survive in escaped shape.
+    const escaped = JSON.stringify(secret).slice(1, -1);
+    if (escaped && escaped !== secret) text = text.split(escaped).join("[redacted]");
   }
   return text;
 }

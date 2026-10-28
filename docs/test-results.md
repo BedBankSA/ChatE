@@ -1,62 +1,54 @@
 # نتائج الاختبار
 
-التاريخ: 2026-10-27. لم يُنشر الموقع. لم يُستدعَ Haiku حيًا. لم يُرسل إكمال محادثة إلى OpenRouter.
+التاريخ: 2026-10-28. لم يُنشر الموقع. لم يُستدعَ Haiku حيًا. لم يُرسل أي طلب إلى OpenRouter أو Anthropic.
 
-## اختبارات محلية
+## ملخص التحقق
+
+| الأمر | النتيجة |
+| --- | --- |
+| `npm run typecheck` | نجاح، بلا أخطاء |
+| `npm run lint` | نجاح، بلا أخطاء |
+| `npm test` | نجاح: 78 اختبارًا في 10 ملفات، 0 فشل |
+| `npm run build` | نجاح (Next.js 16.4.3، Turbopack) |
+| `npm run check:bundle` | نجاح: 14 ملفًا في `.next/static` بلا أسماء أسرار ولا قيم أسرار |
+| `npm run db:migrate` | طُبقت `003_security.sql` و`004_stats.sql` و`005_indexes.sql` على `data/chate.sqlite` |
+
+## الاختبارات
 
 الأمر:
 
 ```powershell
-node .\node_modules\vitest\vitest.mjs run tests/product.test.ts
+npm test
 ```
 
-النتيجة: **نجاح**. 13 اختبارًا نجحت، 0 فشلت. الملف `tests/product.test.ts`.
+النتيجة: **نجاح**. 78 اختبارًا نجحت، 0 فشلت. الملفات:
 
-غطت الاختبارات: رفض المجهول، جمهور Google الخاطئ، الاسم والبريد من المطالبة المتحققة، الجوال قبل OTP، رفض الإدارة، Turnstile الناقص والمعاد والإجراء والنطاق وlocalhost في الإنتاج، السؤال نفسه لنموذجين وفشل أحدهما، منع الاستبدال والمسار المدفوع، حظر التضمين 1B وفصل الفهارس، لقطات Gemma وFlint وInkling وHaiku، الصفحات الفاشلة وzip-slip، ملف الارتباط، وغياب أسماء الأسرار من مصدر الواجهة.
+- `tests/product.test.ts` — 14
+- `tests/sqlite-store.test.ts` — 8
+- `tests/google-signin.test.ts` — 8
+- `tests/admin-dashboard.test.ts` — 8
+- `tests/admin-operations.test.ts` — 8 (جديد)
+- `tests/admin-user-query.test.ts` — 8 (جديد)
+- `tests/security-hardening.test.ts` — 10 (جديد)
+- `tests/shortcut-plan.test.ts` — 4
+- `tests/ui-fixes.test.ts` — 7
+- `tests/visual-theme.test.ts` — 3
+
+تغطي الاختبارات الجديدة: كتابة عدادات العمليات في `operation_stats` و`operation_buckets` و`latency_histogram`، وتنقية رموز الأخطاء قبل الإدراج، وتسجيل المحاولات الإضافية وتصنيف 429، وعدّاد الحضور وانتهاء صلاحيته، ورفض مصفّحات المستخدمين غير المسموحة، وإصلاح بحث الجوال غير E.164، وتنقية محارف LIKE، وتصلّب رمز الجلسة، وترويسة HSTS، ومنع إعادة استخدام رمز Turnstile عبر SQLite وعبر الذاكرة المحدودة.
 
 ## البناء
 
-بعد نقل `node_modules` إلى `C:\Users\dr_em\AppData\Local\ChatE-node_modules` وإنشاء junction، أُعيد البناء مرة واحدة. لم يكن هناك ملف `.next\lock`.
-
 الأمر:
 
 ```powershell
-C:\Users\dr_em\OneDrive\Desktop\ChatE\.tools\node-dist\node-v24.22.1-win-x64\node.exe .\node_modules\next\dist\bin\next build
+npm run build
 ```
 
-النتيجة: **فشل**. رمز الخروج `1`.
+النتيجة: **نجاح**. رمز الخروج `0`. المسارات الديناميكية تشمل `/admin` و`/api/admin/overview` و`/api/admin/users`.
 
-أول خطأ:
+## ما لم يُشغَّل
 
-```text
-Error: Cannot find module 'next/dist/compiled/commander'
-Require stack:
-- C:\Users\dr_em\AppData\Local\ChatE-node_modules\next\dist\bin\next
-```
-
-Node حلّ مسار Next عبر المسار الحقيقي خارج مجلد اسمه `node_modules`. الملف `dist\compiled\commander\index.js` موجود على القرص، لكن التحميل توقف قبل التجميع. لم يُشغَّل بناء ثانٍ.
-
-## ما لم يُشغَّل
-
-- Docker غير مثبت. `npm run db:migrate` لم يُنفذ. لا يُدّعى أن Postgres يعمل.
-- Playwright لم يُشغَّل.
-- لا استدعاء حي لـ Anthropic.
-- طلب قراءة OpenRouter في هذا التنفيذ كان `GET /api/v1/models` مرة واحدة. نقاط embeddings والقرار والكلام موثقة في `docs/openrouter-model-registry.md` من قراءة سابقة باليوم نفسه، ولم تُعد هنا.
-
-`npm install` تعثر أولًا بشهادة TLS ثم بأقفال OneDrive على `node_modules`. التشغيل أعلاه تم بعد اكتمال الشجرة بما يكفي لـ Vitest وNext.
-
-## تخزين SQLite
-
-القسم السابق يصف التشغيل قبل اعتماد ملف SQLite. بعده لم يعد التشغيل يطلب Docker أو Postgres.
-
-`npm run db:migrate` أنشأ `data/chate.sqlite` وطبق `001_init.sql`. تشغيل ثانٍ طبع `no pending migrations`.
-
-الأمر:
-
-```powershell
-C:\Pak\node.exe .\node_modules\vitest\vitest.mjs run tests/product.test.ts tests/sqlite-store.test.ts
-```
-
-النتيجة: **نجاح**. 22 اختبارًا نجحت، 0 فشلت. 14 في `tests/product.test.ts` و8 في `tests/sqlite-store.test.ts`.
-
-`tsc --noEmit` نجح. لم يُستدعَ مزود مدفوع. لم يُنشر الموقع.
+- لا استدعاء حي لـ Anthropic أو OpenRouter. كل مزود في الاختبارات دالة `fetch` وهمية.
+- Playwright غير موصول؛ لا حزمة E2E في هذا المستودع.
+- لا نشر عام.
+- `npm run worker` لم يُترك يعمل؛ يُشغَّل يدويًا في طرفية ثانية عند الحاجة.
