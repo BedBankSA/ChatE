@@ -1,17 +1,17 @@
 ﻿# Public deployment evidence - ChatE (temporary Cloudflare quick tunnel)
 
-Generated: 2026-10-28T14:17:58Z (UTC). **Verdict: PASS** (13 PASS / 0 FAIL).
+Generated: 2026-10-28T14:28:55Z (UTC). **Verdict: PASS** (13 PASS / 0 FAIL).
 
 > TEMPORARY public URL from a Cloudflare quick tunnel. It is not durable production hosting, has no SLA, and stops working when the process stops. It is not a substitute for docs/launch/DEPLOYMENT-RUNBOOK.md.
 
 | Field | Value |
 | --- | --- |
 | Public URL | https://relatives-observations-proc-court.trycloudflare.com |
-| Local server | http://127.0.0.1:3223 (pid 3744) |
-| Tunnel | cloudflared cloudflared version 2026.10.5 (built 2026-10-27T06:05 UTC) (pid 29160) |
+| Local origin | http://127.0.0.1:3223 (pid 13276) |
+| Tunnel | cloudflared version 2026.10.5 (built 2026-10-27T06:05 UTC) (pid 29160) |
 | Production build | BUILD_ID=EJffcvoV_rRnCN_gm-1Bg |
 | Node | v24.22.1 |
-| Checked with | curl.exe from the build machine; same checks the repo script scripts/deploy/public-demo.ps1 performs |
+| Method | curl.exe from the build machine; same checks as scripts/deploy/public-demo.ps1; origin restarted on the current build before re-probing |
 
 ## Checks
 
@@ -33,8 +33,8 @@ Generated: 2026-10-28T14:17:58Z (UTC). **Verdict: PASS** (13 PASS / 0 FAIL).
 
 ## What this proves
 
-- This exact production build is reachable over public HTTPS from the internet through Cloudflare edge (no account, ephemeral hostname).
-- The Arabic RTL landing page, /privacy, /terms and GET /api/models (200, ok:true) render anonymously.
+- This exact production build (BUILD_ID=EJffcvoV_rRnCN_gm-1Bg) is reachable over public HTTPS from the internet through the Cloudflare edge (no account, ephemeral hostname).
+- The Arabic RTL landing page, /privacy, /terms and GET /api/models (200, "ok":true) render anonymously.
 - Anonymous API access stays closed: admin/history 401, comparisons 401, uploads 401/403.
 - Production security headers are present publicly: HSTS, CSP without unsafe-eval, X-Frame-Options DENY, no x-powered-by.
 
@@ -42,7 +42,7 @@ Generated: 2026-10-28T14:17:58Z (UTC). **Verdict: PASS** (13 PASS / 0 FAIL).
 
 - **No durable hosting**: a quick tunnel is ephemeral; the URL dies with the process. Production still needs the VPS + Caddy + Cloudflare path in docs/launch/DEPLOYMENT-RUNBOOK.md.
 - **No product domain / owned DNS / managed TLS**: TLS here is Cloudflare's edge certificate for *.trycloudflare.com.
-- **Google sign-in is expected NOT to work on this origin** (baked NEXT_PUBLIC_GOOGLE_CLIENT_ID is not an authorized JS origin for this hostname, and APP_URL does not match).
+- **Google sign-in is expected NOT to work on this origin** (the baked NEXT_PUBLIC_GOOGLE_CLIENT_ID is not an authorized JavaScript origin for this hostname, and APP_URL does not match).
 - **Turnstile-gated flows are expected NOT to work for real browser users on this origin** (.env.local lists localhost/127.0.0.1, which production mode rejects by design; the throwaway hostname is not registered on the widget). Uploads/OTP/comparison E2E was proven separately on 127.0.0.1 with a QA preload, not through this public URL.
 - No load, capacity, uptime monitoring, or provider call is made by this public check.
 
@@ -52,4 +52,3 @@ Generated: 2026-10-28T14:17:58Z (UTC). **Verdict: PASS** (13 PASS / 0 FAIL).
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\deploy\public-demo.ps1 -Build
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\deploy\public-demo.ps1 -Stop
 ```
-

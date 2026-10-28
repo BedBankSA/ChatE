@@ -67,6 +67,7 @@ Server secrets, empty in the example:
 - `TURNSTILE_SECRET_KEY`
 - `OTP_HTTP_AUTHORIZATION`
 - `OTP_PEPPER`
+- `SMS_API_KEY` and `SMS_API_SECRET` (SMS gateway credentials; for 4jawaly the secret is the HTTP Basic password)
 
 Public values, not secrets:
 
@@ -78,7 +79,7 @@ Public values, not secrets:
 - `STORAGE_DIR`: private file storage root (default `storage`, gitignored). `DOWNLOAD_URL_TTL_SECONDS` is not read yet because no public download route exists.
 - `USER_QUOTA_UNITS`, `SHARED_QUOTA_UNITS`, `MAX_USER_CONCURRENCY`, `MAX_GLOBAL_CONCURRENCY`, `MODEL_TIMEOUT_MS`, and `MAX_PROVIDER_RETRIES`
 - Enforced upload limits: `MAX_FILE_BYTES` (default 26214400), five files, and 50 MiB per request. `MAX_ZIP_ENTRIES`, `MAX_ZIP_DEPTH`, and `MAX_ZIP_UNCOMPRESSED_BYTES` are documented but not read yet.
-- `OTP_PROVIDER` and `OTP_HTTP_URL`
+- `SMS_PROVIDER` (`4jawaly`, `taqnyat`, `unifonic`, `generic`, `mock`), `SMS_SENDER_ID`, `SMS_OTP_TEXT`, and optional `SMS_ENDPOINT` (blank = each provider's default endpoint; `generic` requires it or falls back to `OTP_HTTP_URL`). `OTP_PROVIDER`/`OTP_HTTP_URL` stay supported for backwards compatibility and take precedence when non-empty; keep them blank in a real deployment.
 - `ADMIN_GOOGLE_SUBS` and `ADMIN_EMAILS`
 - `RETENTION_COMPARISON_DAYS` and `RETENTION_FILE_DAYS`
 
@@ -111,7 +112,7 @@ Present in code, and covered by tests plus a local production server and live pr
 - Comparison planning, blocking a restricted model, and the Haiku request shape at effort `medium`, with live Haiku calls gated behind `HAIKU_LIVE_CALLS=1`.
 - SQLite migrations, quota reservation, binding a comparison to the session user, and session validation against the stored account (immediate suspension/revocation).
 - Phone gate: without a verified number, a model call is not sent.
-- Phone verification is implemented: `POST /api/otp/send` and `POST /api/otp/verify` with a hashed challenge, send limits (3 per 15 minutes) and attempt limits (5), plus a two-step UI at `/profile/complete`. The HTTP provider contract is hardened and tested against a real local HTTP server; the owner only needs to set `OTP_PROVIDER=http` and an https `OTP_HTTP_URL` for a real SMS gateway.
+- Phone verification is implemented: `POST /api/otp/send` and `POST /api/otp/verify` with a hashed challenge, send limits (3 per 15 minutes) and attempt limits (5), plus a two-step UI at `/profile/complete`. The customer may type the mobile in any format (national `05…`/`5…`, international `+966…`/`00966…`/`966…`, Arabic-Indic digits, spaces/dashes); the server always normalizes and stores `+9665XXXXXXXX` only (`src/domain/auth/saudi-phone.ts`). The gateway layer (`src/server/sms/adapter.ts`) supports 4jawaly (live), Taqnyat, Unifonic, generic HTTP and a dev mock, selected by `SMS_PROVIDER` plus credentials. Missing configuration fails closed 503 `OTP_FAIL_CLOSED`; gateway failures are the opaque 502 `OTP_PROVIDER` with no provider text or OTP code.
 - Uploads: private byte storage, content-based detection, PDF/DOCX/text extraction, and `attachmentIds` wired into comparison creation with evidence/image delivery to models.
 - Real read-only comparison history: `/history`, `/history/[id]`, and `GET /api/history` with account isolation.
 - `GET /api/health` liveness/readiness probe (database only, no sensitive data), and `Cache-Control: no-store` on comparison responses.
@@ -121,7 +122,7 @@ Present in code, and covered by tests plus a local production server and live pr
 Not done:
 
 - Admin dashboard. `/admin` is gated by the stored Google session and the `ADMIN_GOOGLE_SUBS`/`ADMIN_EMAILS` allowlist, never by an email typed into the URL. It shows local counters (questions, calls, failures, tokens, files, storage), a user table with no question or answer text, the audit log, and the last four characters of secret versions. `GET /api/admin/overview` returns 401/403 or the admin payload, and `POST /api/admin/users` accepts suspend, restore, or quota changes only with a matching origin and session CSRF. Counters are written from the comparison path into `operation_stats`, `operation_buckets`, and `latency_histogram` (`004_stats.sql`). No presence heartbeat is wired, so the two presence cards report "unavailable" instead of a misleading zero. The page rotates no secrets and sends no external alert.
-- Real SMS is not configured in this environment; no carrier SMS was sent. What is proven is the real HTTP round-trip: route → `HttpOtpProvider` → local HTTP server → captured code → verify → `phone_verified_at`.
+- A real SMS was sent through 4jawaly to the owner-approved `+966564106506` (test input `0564106506`) and the full `send` → gateway → `verify` → `phone_verified_at` round-trip completed (evidence: `docs/evidence/sms-live.md`, live test: `tests/sms-live.test.ts`). Not yet integrated: automated handset delivery-receipt proof, real-browser verification, and live credentials for Taqnyat/Unifonic (unit-tested only).
 - No durable public deployment, domain, production TLS, or payments. The temporary Cloudflare quick-tunnel demo is presentation tooling, not production hosting (B2).
 - No live call is claimed beyond what is recorded under "Live evidence" with a named provider and date.
 - Uploads are implemented, but a public download route, file deletion, and `RETENTION_FILE_DAYS` enforcement are not; the code does not read `DOWNLOAD_URL_TTL_SECONDS` or `MAX_ZIP_*` yet.
@@ -131,5 +132,6 @@ Not done:
 ## Live evidence
 
 - **Live provider calls (2026-10-28):** a full comparison ran through a local production server against the real network. `claude-haiku-5-5` returned a real completion (433 input / 6 output tokens, 1935 ms, $0.000046), and `cohere/north-mini-code:free` returned a real completion (178/152 tokens, 2678 ms). Two other free models failed with provider 429 and did not prevent the others from completing. Raw evidence: `docs/evidence/live-provider-calls.md` and `docs/evidence/release-verification-2026-10-28T14-06-54-260Z.json`. Stated limits: Turnstile passed via a QA token rather than a browser widget, the session was seeded rather than Google sign-in, and OTP used a local HTTP stub rather than a carrier SMS gateway.
+- **Live SMS gateway (2026-10-28):** three real messages were sent through 4jawaly to `+966564106506` (sender `BedBank`). Raw probe: HTTP 200, `code=200`, `success_count=1`, `error_count=0` (job `0460f882-d2dc-11f1-a7fe-f587caf486fb`). Full live test: input `0564106506` → normalized `+966564106506` → real SMS → code recovered from the local peppered hash → `verify` → `phone_verified_at` (1/1 PASS in 2.7 s). Evidence: `docs/evidence/sms-live.md`.
 - **Release verification (mock + live):** `scripts/qa/verify-release.mjs` runs 14 probes (13 PASS + 1 SKIP for optional browser smoke) in both modes: health and headers, catalog, anonymous 401s, Turnstile (missing/bad/replayed), real loopback-HTTP OTP through `phone_verified_at`, real txt/pdf/png uploads, an attachment comparison with four independently settled runs, database evidence binding, `/history` list and `/history/[id]` detail, IDOR isolation, and secret redaction. Raw evidence: `docs/evidence/release-verification-*.json`.
 - **CI:** `.github/workflows/ci.yml` runs typegen/typecheck/lint/test/build/check:bundle with no secrets. Durable public deployment remains unimplemented (B2); the temporary demo is not counted as a deployment.

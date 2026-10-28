@@ -184,3 +184,14 @@ ChatE's comparison engine, SQLite quota accounting, Google ID-token sign-in, Tur
 **الأوامر المنفَّذة بعد الإصلاح:** `npm run typecheck` (0)، `npm run lint` (0)، `npm test` (**258/258 في 22 ملفًا**)، `npm run build` (نجاح، 17 صفحة ثابتة، 20+ مسارًا)، `npm run check:bundle` (14 ملفًا نظيفًا)، `verify-release --mode=mock` و`--mode=live` (**13 PASS / 0 FAIL / 1 SKIP** لكل وضع)، وترحيلات `001`→`006` على قاعدة نظيفة.
 
 **ما بقي مانعًا (لم يتغير):** B2 النشر العام الدائم (VPS/TLS/نطاق/Cloudflare)، B7 المدفوعات، B8 مزود SMS تجاري، B10 تنفيذ الاحتفاظ/حذف الحساب، B11 المراقبة/التنبيه الخارجي، B12 الدعم/الامتثال القانوني، B13 staging + اختبار متصفح آلي، B4 حذف الحساب. **التقدير المؤقت: ≈62/100 (من 44) — ما زال Blocked لإطلاق عام/مدفوع، وPrivate beta مشروطة بإغلاق B8 وقرار الإطلاق.**
+
+## 11. تحديث ربط مزود SMS (2026-10-28 ~17:51)
+
+هذا القسم يُحدِّث البندين B1 وB8 أعلاه ولا يلغيهما:
+
+| البند | الحالة الآن | الدليل |
+| --- | --- | --- |
+| B8 مزود SMS | **مُخفَّف بقوة**: حساب 4jawaly حي، sender `BedBank`، إرسال SMS حقيقي إلى `+966564106506` مع قبول المزود (`code=200`، `success_count=1`). المتبقي: delivery-receipt/status callbacks، ودورة staging على نطاق إنتاجي، وتدوير الأسرار. | `docs/evidence/sms-live.md`، `tests/sms-live.test.ts` |
+| B1 OTP طرفًا لطرف | **مغلق محليًا**: إدخال حر `0564106506` → تطبيع `+966564106506` → SMS حقيقي → `verify` → `phone_verified_at`. المتبقي: إثبات staging + مقارنة تصل `dispatchModel` بدليل log/run row. | `docs/evidence/sms-live.md`، `tests/otp-route.test.ts`، `tests/saudi-phone-normalizer.test.ts` |
+
+**البوابات النهائية (2026-10-28T17:51):** typecheck 0، lint 0، `npm test` **371/371 في 26 ملفًا** (+1 حي مُتخطى)، `next build` ناجح (23 مسارًا ديناميكيًا + 1 ثابت)، `check:bundle` نظيف (14 ملفًا)، والاختبار الحي 1/1 PASS.

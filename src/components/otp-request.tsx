@@ -11,9 +11,10 @@ type OtpResponse = {
   error?: { message?: string; code?: string; remainingAttempts?: number };
 };
 
-// One consistent UX: a single field that must include the international
-// prefix. The server rejects national-only input instead of guessing a country.
-const PHONE_HINT = "أدخل الرقم مع مفتاح الدولة في حقل واحد، مثل +966501234567";
+// One free-form field: the customer types the mobile number in any format
+// (national, international, +966, 00966, Arabic-Indic digits); the server
+// normalizes it and always stores E.164 (+9665XXXXXXXX).
+const PHONE_HINT = "أدخل رقم جوالك بأي صيغة وسنرسله إليه.";
 const SECURITY_RETRY = "تعذر التحقق الأمني. أعد المحاولة.";
 const FALLBACK_SEND = "تعذر إرسال رمز التحقق.";
 const FALLBACK_VERIFY = "تعذر تأكيد الرمز.";
@@ -113,10 +114,9 @@ export function OtpRequestForm() {
               onChange={(event) => setPhone(event.target.value)}
               inputMode="tel"
               autoComplete="tel"
-              placeholder="+9665..."
-              aria-label="رقم الجوال مع مفتاح الدولة"
+              placeholder="05xxxxxxxx"
+              aria-label="رقم الجوال"
               dir="ltr"
-              maxLength={20}
               disabled={pending}
               required
             />

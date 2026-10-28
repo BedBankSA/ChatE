@@ -15,7 +15,6 @@ import {
 import { PHONE_UNVERIFIED_MESSAGE, PHONE_VERIFICATION_MESSAGE, modelUseBlock } from "@/domain/auth/model-gate";
 import { migrateDatabase, openDatabase } from "@/server/db/index";
 import { otpPepper } from "@/server/otp/config";
-import { parseInternationalPhone } from "@/server/otp/phone";
 import {
   consumeChallenge,
   countRecentSends,
@@ -130,24 +129,6 @@ describe("OTP challenge domain rules", () => {
       ok: false,
       reason: "expired",
     });
-  });
-});
-
-describe("international phone parsing", () => {
-  it("accepts one international field with a dialing prefix", () => {
-    expect(parseInternationalPhone("+966501234567")).toEqual({ ok: true, e164: "+966501234567" });
-    expect(parseInternationalPhone("  +966512345678 ")).toEqual({ ok: true, e164: "+966512345678" });
-    expect(parseInternationalPhone("+12025550143")).toEqual({ ok: true, e164: "+12025550143" });
-  });
-
-  it("rejects national-only, malformed and overlong input", () => {
-    expect(parseInternationalPhone("0501234567").ok).toBe(false);
-    expect(parseInternationalPhone("966501234567").ok).toBe(false);
-    expect(parseInternationalPhone("+96650123").ok).toBe(false);
-    expect(parseInternationalPhone("++966501234567").ok).toBe(false);
-    expect(parseInternationalPhone("+999999999999").ok).toBe(false);
-    expect(parseInternationalPhone("").ok).toBe(false);
-    expect(parseInternationalPhone("+" + "9".repeat(40)).ok).toBe(false);
   });
 });
 

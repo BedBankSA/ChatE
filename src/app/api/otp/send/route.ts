@@ -1,5 +1,6 @@
 import { randomInt } from "node:crypto";
-import { createOtpProvider, issueChallenge, OTP_MAX_SENDS, OTP_TTL_MS, OTP_WINDOW_MS } from "@/domain/auth/otp";
+import { issueChallenge, OTP_MAX_SENDS, OTP_TTL_MS, OTP_WINDOW_MS } from "@/domain/auth/otp";
+import { normalizeSaudiMobile } from "@/domain/auth/saudi-phone";
 import { publicError } from "@/domain/errors";
 import { readStoredProfile } from "@/server/db/profiles";
 import { getDatabase } from "@/server/db/runtime";
@@ -7,11 +8,10 @@ import { gateTurnstile, readJson } from "@/server/guard";
 import { readComparisonSession } from "@/server/google-session";
 import { jsonError, jsonOk } from "@/server/http";
 import { otpPepper } from "@/server/otp/config";
-import { parseInternationalPhone } from "@/server/otp/phone";
 import { countRecentSends, hasVerifiedPhone, insertChallenge, latestAnyChallenge } from "@/server/otp/service";
+import { createSmsSender } from "@/server/sms/adapter";
 
 const ANONYMOUS_MESSAGE = "يلزم تسجيل الدخول قبل إرسال رمز التحقق";
-const PHONE_MESSAGE = "أدخل رقم جوال صحيحًا مع مفتاح الدولة، مثل +966501234567.";
 const RESEND_MESSAGE = "تجاوزت حد إعادة إرسال الرمز. حاول بعد ١٥ دقيقة.";
 const STORE_MESSAGE = "تعذر حفظ رمز التحقق.";
 const PROVIDER_MESSAGE = "تعذر إرسال رمز التحقق. أعد المحاولة لاحقًا.";
@@ -39,8 +39,10 @@ export async function POST(request: Request) {
   }
   const blocked = await gateTurnstile(request, body, "otp");
   if (blocked) return blocked;
-  const phone = parseInternationalPhone(typeof body.phone === "string" ? body.phone : "");
-  if (!phone.ok) return jsonError(PHONE_MESSAGE, "OTP_PHONE", 422);
+  // One free-form phone field: the normalizer accepts national/international
+  // spellings and returns the stored E.164, or its own Arabic rejection message.
+  const phone = normalizeSaudiMobile(typeof body.phone === "string" ? body.phone : "");
+  if (!phone.ok) return jsonError(phone.message, "OTP_PHONE", 422);
   const now = Date.now();
   let recentSends;
   try {
@@ -54,12 +56,9 @@ export async function POST(request: Request) {
   let provider;
   let pepper: string;
   try {
-    provider = createOtpProvider({
-      nodeEnv: process.env.NODE_ENV ?? "development",
-      provider: process.env.OTP_PROVIDER,
-      httpUrl: process.env.OTP_HTTP_URL,
-      httpAuthorization: process.env.OTP_HTTP_AUTHORIZATION,
-    });
+    // The adapter resolves SMS_PROVIDER (new) or OTP_PROVIDER (legacy) and fails
+    // closed with the same 503 OTP_FAIL_CLOSED when no gateway is configured.
+    provider = createSmsSender(process.env);
     pepper = otpPepper(process.env);
   } catch (error) {
     const pub = publicError(error);
@@ -78,6 +77,7 @@ export async function POST(request: Request) {
     return jsonError(STORE_MESSAGE, "store", 500);
   }
   try {
+    // The adapter owns the carrier wire format (e.g. 9665... without "+").
     await provider.send({ to: phone.e164, code });
   } catch {
     // Never surface a provider body or error text to the browser.

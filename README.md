@@ -67,6 +67,7 @@ SQLite هنا ملف بكاتب واحد في اللحظة. الاتصال يف�
 - `TURNSTILE_SECRET_KEY`
 - `OTP_HTTP_AUTHORIZATION`
 - `OTP_PEPPER`
+- `SMS_API_KEY` و`SMS_API_SECRET` (بيانات اعتماد مزود الرسائل؛ في 4jawaly السر هو كلمة مرور HTTP Basic)
 
 قيم عامة وليست أسرارًا:
 
@@ -78,7 +79,7 @@ SQLite هنا ملف بكاتب واحد في اللحظة. الاتصال يف�
 - `STORAGE_DIR`: مجلد التخزين الخاص للملفات (افتراضي `storage`، مستبعد من Git). `DOWNLOAD_URL_TTL_SECONDS` غير مقروء بعد لعدم وجود مسار تنزيل عام.
 - `USER_QUOTA_UNITS` و`SHARED_QUOTA_UNITS` و`MAX_USER_CONCURRENCY` و`MAX_GLOBAL_CONCURRENCY` و`MODEL_TIMEOUT_MS` و`MAX_PROVIDER_RETRIES`
 - حدود الرفع المنفّذة: `MAX_FILE_BYTES` (الافتراضي 26214400) وخمسة ملفات و50 مبيبايت للطلب. `MAX_ZIP_ENTRIES` و`MAX_ZIP_DEPTH` و`MAX_ZIP_UNCOMPRESSED_BYTES` موثقة لكن غير مقروءة بعد.
-- `OTP_PROVIDER` و`OTP_HTTP_URL`
+- `SMS_PROVIDER` (`4jawaly` أو `taqnyat` أو `unifonic` أو `generic` أو `mock`) و`SMS_SENDER_ID` و`SMS_OTP_TEXT`، و`SMS_ENDPOINT` اختياري (فارغ = عنوان المزود الافتراضي؛ `generic` يتطلبه أو يستخدم `OTP_HTTP_URL`). `OTP_PROVIDER` و`OTP_HTTP_URL` قديمان ويُدعمان للتوافق ويسبقان `SMS_PROVIDER` عند ضبطهما؛ اتركهما فارغين في نشر حقيقي.
 - `ADMIN_GOOGLE_SUBS` و`ADMIN_EMAILS`
 - `RETENTION_COMPARISON_DAYS` و`RETENTION_FILE_DAYS`
 - `HAIKU_LIVE_CALLS`: `0` افتراضيًا؛ لا يُرسل Haiku حيًا إلا بالقيمة `1` وموافقة المالك على التكلفة.
@@ -112,7 +113,7 @@ Claude Haiku 5.5 معرف `claude-haiku-5-5` عبر Anthropic مباشرة عل�
 - تخطيط المقارنة، ومنع النموذج المقيد، وشكل طلب Haiku بجهد `medium`، وتعطيل Haiku الحي افتراضيًا حتى `HAIKU_LIVE_CALLS=1`.
 - هجرات SQLite وحجز الحصة وربط المقارنة بمستخدم الجلسة، وتحقق جلسة مقابل صف المستخدم الفعلي (إيقاف/إبطال فوري).
 - بوابة الجوال: بلا رقم موثّق لا يُرسل استدعاء نموذج.
-- توثيق الجوال منفّذ: `POST /api/otp/send` و`POST /api/otp/verify` مع تخزين تحدٍّ مجزّأ، ومحددات إرسال (3/15 دقيقة) ومحاولات (5)، وواجهة من خطوتين في `/profile/complete`. مزود الرسائل HTTP مثبّت بعقد موثّق ويُختبر ضد خادم HTTP حقيقي محليًا؛ يحتاج المالك إلى `OTP_PROVIDER=http` و`OTP_HTTP_URL` (https) لمزود رسائل حقيقي.
+- توثيق الجوال منفّذ: `POST /api/otp/send` و`POST /api/otp/verify` مع تخزين تحدٍّ مجزّأ، ومحددات إرسال (3/15 دقيقة) ومحاولات (5)، وواجهة من خطوتين في `/profile/complete`. المستخدم يكتب رقم الجوال بأي صيغة (محلية `05…`/`5…`، دولية `+966…`/`00966…`/`966…`، أو أرقام عربية-هندية مع مسافات/شرطات) ويُطبَّع الرقم دائمًا إلى `+9665XXXXXXXX` ويُحفظ بهذه الصيغة فقط (`src/domain/auth/saudi-phone.ts`). مزود الرسائل مربوط عبر `src/server/sms/adapter.ts` بمحوّلات 4jawaly (حي) وTaqnyat وUnifonic وGenericHTTP وMockDev، ويُقرأ من `SMS_PROVIDER` + بيانات الاعتماد. فشل الإعداد = 503 `OTP_FAIL_CLOSED`، وفشل المزود = 502 `OTP_PROVIDER` بلا نص المزود أو الرمز.
 - رفع الملفات: تخزين بايتات خاص، كشف النوع من المحتوى، استخراج نص PDF/DOCX/نصوص، وربط `attachmentIds` بإنشاء المقارنة وتمرير الأدلة/الصور للنماذج.
 - سجل المقارنات للقراءة فقط: `/history` و`/history/[id]` و`GET /api/history` مع عزل الحسابات.
 - `GET /api/health` فحص جاهزية خفيف (قاعدة البيانات) بلا بيانات حساسة، و`Cache-Control: no-store` على ردود المقارنات.
@@ -122,7 +123,7 @@ Claude Haiku 5.5 معرف `claude-haiku-5-5` عبر Anthropic مباشرة عل�
 غير مكتمل:
 
 - لوحة الإدارة: `/admin` محمية بجلسة Google المخزنة وبقائمة `ADMIN_GOOGLE_SUBS`/`ADMIN_EMAILS`، لا ببريد مكتوب في الرابط. تعرض عدادات محلية (الأسئلة، الاستدعاءات، الأخطاء، الرموز، الملفات، التخزين)، وجدول مستخدمين بلا نص سؤال أو إجابة، وسجل تدقيق، وآخر أربعة أحرف من إصدارات الأسرار. `GET /api/admin/overview` يعيد 401/403 أو بيانات الإدارة، و`POST /api/admin/users` يقبل إيقافًا أو تفعيلًا أو تعديل حصة مع تحقق CSRF وأصل مطابق. العدادات تُكتب من مسار المقارنة في `operation_stats` و`operation_buckets` و`latency_histogram` (الهجرة `004_stats.sql`). لا نبض حضور موصول، لذلك تظهر بطاقتا الحضور «غير متاح» بدل صفر مضلّل. لا تدوير أسرار ولا تنبيه خارجي من الصفحة.
-- مزود الرسائل الحقيقي غير مهيأ في هذا التجهيز، ولم يُرسل رمز SMS حي عبر شبكة مشغّل رسائل. المثبت هو دورة HTTP حقيقية: المسار ← `HttpOtpProvider` ← خادم HTTP محلي ← التقاط الرمز ← التحقق ← `phone_verified_at`.
+- أُرسل رمز SMS حي فعليًا عبر 4jawaly إلى الرقم المعتمد `+966564106506` (مدخل اختباري `0564106506`) وأُكملت دورة `send` ← مزود ← `verify` ← `phone_verified_at` (الدليل: `docs/evidence/sms-live.md`، الاختبار الحي: `tests/sms-live.test.ts`). غير متجزئ بعد: إثبات استلام على الجهاز آليًا (delivery receipt/status callbacks)، والتحقق المتصفحي، ولا توجد بيانات اعتماد لـ Taqnyat/Unifonic لاختبارها حيًا (اختبارها بوحدات فقط).
 - لا نشر عام دائم، ولا نطاق، ولا TLS إنتاجي، ولا نظام دفع. العرض العام المؤقت عبر Cloudflare quick tunnel أداة عرض لا تنشر إنتاجيًا (B2).
 - لا يُدّعى نجاح استدعاء حي إلا ما هو مسجّل في قسم الأدلة أدناه مع مزود محدد وتاريخ.
 - رفع الملفات منفّذ لكن غير منفّذ: رابط تنزيل عام، حذف الملفات، وتطبيق `RETENTION_FILE_DAYS`؛ ولا يقرأ الكود بعد `DOWNLOAD_URL_TTL_SECONDS` أو `MAX_ZIP_*`.
@@ -132,6 +133,7 @@ Claude Haiku 5.5 معرف `claude-haiku-5-5` عبر Anthropic مباشرة عل�
 ## الأدلة الحية
 
 - **استدعاءات المزودين الحية (2026-10-28):** نُفّذت مقارنة كاملة عبر خادم إنتاجي محلي مع شبكة حقيقية. `claude-haiku-5-5` أكمل برد حقيقي (433 توكن دخل/6 خرج، 1935 مللي ثانية، تكلفة 0.000046 دولار)، و`cohere/north-mini-code:free` أكمل برد حقيقي (178/152 توكن، 2678 مللي ثانية). فشل نموذجان مجانيان آخران بسبب 429 من المزود ولم يمنعا نجاح البقية. الأدلة الخام: `docs/evidence/live-provider-calls.md` و`docs/evidence/release-verification-2026-10-28T14-06-54-260Z.json`. القيود المعلنة: Turnstile مرّ عبر رمز QA لا ودجت متصفح، والجلسة مزروعة لا دخول Google، وOTP عبر خادم HTTP محلي لا مزود SMS.
+- **مزود SMS حي (2026-10-28):** أُرسلت ثلاث رسائل حقيقية عبر 4jawaly إلى `+966564106506` (sender `BedBank`). فحص خام: HTTP 200 و`code=200` و`success_count=1` و`error_count=0` (job `0460f882-d2dc-11f1-a7fe-f587caf486fb`). والاختبار الحي الكامل: مدخل `0564106506` ← تطبيع إلى `+966564106506` ← إرسال SMS حقيقي ← استخراج الرمز من الهاش المحلي ← `verify` ← `phone_verified_at` (1/1 PASS في 2.7 ثانية). الأدلة: `docs/evidence/sms-live.md`.
 - **تحقق الإصدار (mock + live):** `scripts/qa/verify-release.mjs` يغطي 14 فحصًا (13 PASS + 1 SKIP للتحقق المتصفحي الاختياري) في الوضعين: الصحة والرؤوس، السجل، 401 للمجهول، Turnstile (مفقود/خاطئ/معاد)، OTP حقيقي عبر HTTP loopback حتى `phone_verified_at`، رفع txt/pdf/png، مقارنة بمرفقات مع 4 نتائج مستقلة، ربط الأدلة في القاعدة، السجل `/history` و`/history/[id]`، عزل IDOR، وتنقية الأسرار. الأدلة: `docs/evidence/release-verification-*.json`.
 - **CI:** `.github/workflows/ci.yml` يشغّل typegen/typecheck/lint/test/build/check:bundle بلا أسرار. النشر العام الدائم ما زال غير منفّذ (B2)؛ العرض المؤقت لا يُحتسب نشرًا.
 

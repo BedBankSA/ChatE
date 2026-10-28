@@ -1,4 +1,5 @@
 import { externalAlertResult } from "@/domain/admin/alerts";
+import { otpProviderConfigured } from "@/domain/auth/model-gate";
 import { PRESENCE_NOTE } from "@/domain/admin/presence";
 import { removeSecretValues, stripPrivateKeys } from "@/domain/admin/privacy";
 import { SERVICE_IDS, type ServiceId } from "@/domain/admin/services";
@@ -15,6 +16,8 @@ const SECRET_ENV = [
   "TURNSTILE_SECRET_KEY",
   "OTP_HTTP_AUTHORIZATION",
   "OTP_PEPPER",
+  "SMS_API_KEY",
+  "SMS_API_SECRET",
 ] as const;
 
 const NOTICES: Record<string, string> = {
@@ -94,7 +97,9 @@ export function serviceConfigured(service: ServiceId, env: Record<string, string
   if (service === "openrouter") return Boolean(env.OPENROUTER_API_KEY?.trim());
   if (service === "turnstile") return Boolean(env.TURNSTILE_SECRET_KEY?.trim());
   if (service === "google") return Boolean(env.GOOGLE_CLIENT_ID?.trim());
-  if (service === "otp") return env.OTP_PROVIDER === "http" && Boolean(env.OTP_HTTP_URL?.trim());
+  // One predicate for the page, the model gate and the OTP route: a workable
+  // SMS_PROVIDER (or legacy OTP_PROVIDER=http) means OTP can deliver a code.
+  if (service === "otp") return otpProviderConfigured(env);
   return SERVICE_IDS.includes(service);
 }
 

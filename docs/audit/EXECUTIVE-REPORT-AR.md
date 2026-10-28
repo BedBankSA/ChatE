@@ -4,7 +4,7 @@
 
 ## English executive summary
 
-ChatE was audited, attacked, documented, rebuilt, and run end-to-end. The working tree now passes typecheck, lint, 258 tests in 22 files, a production build, a clean client-bundle secret scan, a 14/14 API end-to-end flow, 19/19 QA static checks, and a 13/13 release-verification gate in **both** mocked and **live-provider** modes (the live run produced a real Claude Haiku completion and a real OpenRouter completion, plus 3 real file attachments in one comparison). The parallel ECC workstream added private file uploads with text/PDF/DOCX extraction and image hydration, comparison history, MIT LICENSE, a GitHub Actions CI workflow, and a temporary public-demo tunnel tool.
+ChatE was audited, attacked, documented, rebuilt, and run end-to-end. The working tree now passes typecheck, lint, 371 tests in 26 files (plus one opt-in live SMS test skipped by default), a production build, a clean client-bundle secret scan, a 14/14 API end-to-end flow, 19/19 QA static checks, and a 13/13 release-verification gate in **both** mocked and **live-provider** modes (the live run produced a real Claude Haiku completion and a real OpenRouter completion, plus 3 real file attachments in one comparison). The parallel ECC workstream added private file uploads with text/PDF/DOCX extraction and image hydration, comparison history, MIT LICENSE, a GitHub Actions CI workflow, and a temporary public-demo tunnel tool.
 
 **Verdict:** private/invite-only beta = **CONDITIONAL GO** (remaining owner actions are an SMS gateway, a real domain/TLS deployment, production OAuth/Turnstile configuration, and secret rotation). Public free launch and paid launch = **NO-GO**: there is no billing system, no durable hosting, no external observability, no retention/account-deletion runner, and legal pages still promise features that are not fully enforced. Nothing here is legal or security certification.
 
@@ -92,7 +92,7 @@ ChatE was audited, attacked, documented, rebuilt, and run end-to-end. The workin
 | البوابة | النتيجة | الدليل |
 | --- | --- | --- |
 | typecheck / lint | 0 / 0 | `tsc --noEmit`، `eslint .` |
-| الاختبارات | 258/258 في 22 ملفًا | `npm test` |
+| الاختبارات | 371/371 في 26 ملفًا (+1 اختبار SMS حي مُتخطى افتراضيًا) | `npm test` |
 | بناء الإنتاج | نجاح | `vMZH_347l9JjLHbF8SvV8` @ 14:06:06Z |
 | أسرار الحزمة | نظيفة (14 ملفًا) | `npm run check:bundle` |
 | تدفق API شامل | 14/14 PASS | `scripts/dev/verify-full-flow.mjs` |

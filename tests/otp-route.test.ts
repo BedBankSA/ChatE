@@ -2,6 +2,7 @@ import path from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OTP_TTL_MS, hashOtp, issueChallenge } from "@/domain/auth/otp";
+import { SAUDI_MOBILE_INVALID_MESSAGE } from "@/domain/auth/saudi-phone";
 import { signSession } from "@/domain/auth/session";
 import { migrateDatabase, openDatabase } from "@/server/db/index";
 import { insertChallenge, latestAnyChallenge, latestChallenge, setVerifiedPhone } from "@/server/otp/service";
@@ -162,10 +163,23 @@ describe("POST /api/otp/send", () => {
     expect(providerCodes).toHaveLength(0);
   });
 
-  it("rejects a national-only phone number with 422", async () => {
+  it("accepts a national-only phone number and sends the normalized E.164", async () => {
+    // Free-form national input is the primary customer path: the normalizer adds
+    // +966 and the legacy gateway receives the stored E.164, not the raw input.
     const result = await sendOtp("0501234567");
+    expect(result.status).toBe(200);
+    expect(result.body.data?.sent).toBe(true);
+    expect(providerCodes).toHaveLength(1);
+    expect(providerCodes[0]?.to).toBe(PHONE);
+    expect(providerCodes[0]?.code).toMatch(/^\d{6}$/);
+    expect(latestAnyChallenge(database(), USER_ID)?.phoneE164).toBe(PHONE);
+  });
+
+  it("rejects a foreign number with 422 OTP_PHONE and the normalizer message", async () => {
+    const result = await sendOtp("+12025550143");
     expect(result.status).toBe(422);
     expect(result.body.error?.code).toBe("OTP_PHONE");
+    expect(result.body.error?.message).toBe(SAUDI_MOBILE_INVALID_MESSAGE);
     expect(providerCodes).toHaveLength(0);
   });
 

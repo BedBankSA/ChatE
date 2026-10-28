@@ -8,7 +8,7 @@
 
 ## 0) English summary
 
-42 gated items across three phases. **Currently verified:** 78 tests, typecheck/lint, client-bundle secret scan, migrations on a clean DB, online backup+restore drill, deployment artifacts exist and bash scripts pass syntax checks. **Added 2026-10-28:** MIT `LICENSE`, a GitHub Actions CI workflow file (first green run pending push), and temporary public-demo tunnel tooling (`scripts/deploy/public-demo.ps1`; its run writes `docs/evidence/public-deployment.md`). **Everything durable-infra/legal/OTP/payments is unchecked.** No item below proves a live VPS deployment; those stay unchecked until the owner executes the runbook.
+42 gated items across three phases. **Currently verified:** 371 tests in 26 files (+1 opt-in live SMS test skipped by default), typecheck/lint, client-bundle secret scan, migrations `001`→`006` on a clean DB, online backup+restore drill, deployment artifacts exist and bash scripts pass syntax checks, a release E2E gate (mock + live, 13 PASS / 0 FAIL / 1 SKIP each), real live provider calls recorded (Anthropic + OpenRouter), a **real live SMS through 4jawaly** completing send → verify → `phone_verified_at` (`docs/evidence/sms-live.md`), a temporary public Cloudflare quick-tunnel URL probed 13/13 (not durable hosting), MIT `LICENSE`, and a GitHub Actions CI workflow. **Still unchecked:** durable VPS/TLS/Cloudflare deploy, staging, SMS delivery-receipt/status callbacks, payments, retention/deletion execution, external alerting, browser E2E automation. No item below proves a live VPS deployment; those stay unchecked until the owner executes the runbook.
 
 ---
 
@@ -20,12 +20,13 @@
 - [x] **typecheck** — Dev/launch-commander. دليل: `npm run typecheck` → exit 0 (2026-10-28).
 - [x] **lint** — `npm run lint` → exit 0 (2026-10-28).
 - [x] **اختبارات (خط الأساس)** — `npm test` → 78/78 في 10 ملفات (2026-10-28T16:26).
-- [x] **اختبارات (شجرة العمل بعد تغييرات OTP/الأمان)** — `npm test` → **185/185 في 17 ملفًا** (2026-10-28T16:40، غير مُودَعة)؛ أعد التشغيل بعد الدمج.
-- [ ] **اختبار E2E متصفح للمسار الحرج** — Dev. لا Playwright في المستودع (`docs/test-results.md:52`). المطلوب: login → OTP → إنشاء مقارنة → ظهور 4 نتائج → فشل نموذج لا يكسر البقية.
+- [x] **اختبارات (شجرة العمل بعد تغييرات OTP/الأمان)** — `npm test` → **185/185 في 17 ملفًا** (2026-10-28T16:40).
+- [x] **اختبارات (ما بعد ربط مزود SMS)** — `npm test` → **371/371 في 26 ملفًا، 0 فشل** + اختبار SMS حي واحد مُتخطى افتراضيًا (2026-10-28T17:51، شجرة العمل النهائية). تحقق حي مستقل: `SMS_LIVE_TEST=1 vitest run tests/sms-live.test.ts` → 1/1 PASS مع إرسال SMS حقيقي عبر 4jawaly (`docs/evidence/sms-live.md`).
+- [ ] **اختبار E2E متصفح للمسار الحرج** — Dev. لا Playwright آلي في المستودع. البديل المنفَّذ: `scripts/qa/verify-release.mjs` (mock + live، 13 PASS لكل وضع) يغطي API المسار الحرج؛ فحص المتصفح (P14) متخطى كخيار. المطلوب للإغلاق: Playwright أو CDP آلي في CI.
 - [x] **فحص تسرب الأسرار إلى حزمة المتصفح** — `npm run check:bundle` → `client bundle clean: 14 files` (2026-10-28).
 - [ ] **`npm audit --omit=dev` بلا Critical/High** — Ops/Dev. `C:\Pak\npm.cmd audit --omit=dev --audit-level=high`.
-- [x] **بناء إنتاجي ناجح** — Dev/Lead: `next build` PASSED (Next 16.4.3، 17/17 صفحة ثابتة، 20 مسارًا ديناميكيًا) + `check:bundle` clean (2026-10-28، شجرة العمل الحالية).
-- [ ] **دليل عرض عام مؤقت (Cloudflare quick tunnel)** — Lead. الأداة جاهزة: `scripts/deploy/public-demo.ps1` (تتحقق من الصفحات العامة و`GET /api/models` والرؤوس و401 المجهولين، وتكتب `docs/evidence/public-deployment.md`). التشغيل: `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\deploy\public-demo.ps1 -Build` ثم `... -Stop`. **هذا ليس نشرًا دائمًا**؛ B2 يبقى مفتوحًا حتى تنفيذ Runbook على VPS.
+- [x] **بناء إنتاجي ناجح** — Dev/Lead: `next build` PASSED (Next 16.4.3، 17/17 صفحة ثابتة، 21+ مسارًا ديناميكيًا) + `check:bundle` clean (2026-10-28، BUILD_ID `EJffcvoV_rRnCN_gm-1Bg`).
+- [x] **دليل عرض عام مؤقت (Cloudflare quick tunnel)** — Lead. شُغِّل في 2026-10-28: `https://relatives-observations-proc-court.trycloudflare.com`، 13/13 فحص PASS (root RTL 200، `/api/models` 200، `/privacy` و`/terms` 200، 401 للمجهولين، HSTS/CSP/XFO/nosniff). الدليل: `docs/evidence/public-deployment.md`. **هذا ليس نشرًا دائمًا**؛ B2 يبقى مفتوحًا حتى تنفيذ Runbook على VPS. للتوقف: `scripts/deploy/public-demo.ps1 -Stop`.
 - [ ] **بناء نظيف من الصفر على الخادم** — Ops. `rm -rf .next && npm ci && npm run build && npm run check:bundle`. **لا تنسخ `.next` من وضع dev.**
 
 ### A2. الأسرار والإعداد
@@ -34,7 +35,7 @@
 - [ ] `SESSION_SECRET` عشوائي ≥32 بايت: `openssl rand -base64 48` (لا يظهر في السجل).
 - [ ] `ANTHROPIC_API_KEY` و`OPENROUTER_API_KEY` إنتاجيان وقابلان للإلغاء. تحقق دون طباعة: `sudo grep -c '^OPENROUTER_API_KEY=.\+' /etc/chate/chate.env` = 1.
 - [ ] `TURNSTILE_SECRET_KEY` جديد من لوحة Cloudflare للودجت `0x4AAAAAAFoJLWRjfC1ZYlwB`.
-- [ ] `OTP_PROVIDER=http` و`OTP_HTTP_URL` و`OTP_PEPPER` و`OTP_HTTP_AUTHORIZATION` مضبوطة (يعتمد على B8 / مزود SMS).
+- [ ] `SMS_PROVIDER=4jawaly` و`SMS_API_KEY` و`SMS_API_SECRET` و`SMS_SENDER_ID=BedBank` و`OTP_PEPPER` مضبوطة في بيئة الإنتاج، مع إبقاء `OTP_PROVIDER`/`OTP_HTTP_URL` **فارغين** (قيمة قديمة غير فارغة تسبق `SMS_PROVIDER`). تحقق دون طباعة: `sudo grep -c '^SMS_API_KEY=.\+' /etc/chate/chate.env` = 1 و`sudo grep -c '^OTP_PROVIDER=.\+' /etc/chate/chate.env` = 0.
 - [ ] `APP_URL=https://<domain>` (وليس http ولا 3211 ولا 3000). تحقق: `sudo grep '^APP_URL=' /etc/chate/chate.env`.
 - [ ] `GOOGLE_CLIENT_ID` = `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (نفس القيمة) ومسجل في Google Cloud كأصل JavaScript مصرّح.
 - [ ] `TURNSTILE_EXPECTED_HOSTNAMES` = نطاق/نطاقات الإنتاج فقط (لا localhost). الكود يرفض localhost في production (`src/domain/auth/turnstile.ts:21-23`).
@@ -65,7 +66,7 @@
 
 ### A5. المنتج/الوظائف
 
-- [ ] **OTP يعمل طرفًا لطرف** (مانع B1): مسار send/verify + الواجهة موجودة الآن في شجرة العمل (غير مُودَعة)؛ يجب دمجها ثم: `POST /api/otp/send` يرسل رمزًا حقيقيًا، إدخال الرمز يضع `phone_verified_at`، ثم مقارنة تصل لـ`dispatchModel` (دليل log staging أو run row).
+- [x] **OTP يعمل طرفًا لطرف محليًا (B1 جزئيًا):** `POST /api/otp/send` كتب رقمًا بأي صيغة، طبّعه إلى `+966564106506`، أرسل SMS حقيقيًا عبر 4jawaly، ثم `POST /api/otp/verify` وضع `phone_verified_at` (اختبار حي 1/1، `docs/evidence/sms-live.md`). **يبقى مطلوبًا للإغلاق الكامل:** نفس الدورة على staging/نطاق إنتاجي وربطها بـ`dispatchModel` بدليل log/run row، وإثبات delivery-receipt.
 - [ ] رفع الملفات: قرار مالك موثّق — إمّا منفّذ (حفظ بايتات + ربط) أو **مُزال من الادعاءات** في الصفحة/الخصوصية (B3).
 - [ ] حذف الحساب/السجل: منفّذ فعليًا (مسار delete + cascade + ملفات) أو نصوص الصفحات مصحّحة (B4).
 - [ ] صفحة الخصوصية/الشروط: هوية المتحكّم، جهة اتصال، قائمة المزودين (Google/Cloudflare/OpenRouter/Anthropic/SMS)، مدة الاحتفاظ، حقوق المستخدم — مطابقة للواقع (`LEGAL-REVIEW.md`).
@@ -110,15 +111,15 @@
 
 | Area | Status |
 | --- | --- |
-| Code quality gates (typecheck/lint/tests/bundle) | ✅ verified على خط الأساس؛ ✅ 185 اختبارًا على شجرة العمل (غير مُودَعة) |
-| Migrations on clean DB | ✅ verified |
-| Backup/restore technique | ✅ verified |
-| Deploy artifacts (Docker/Caddy/nginx/systemd/scripts) | ✅ authoring complete; bash -n clean؛ backup.sh tested؛ public-demo tunnel tooling أُضيف (`scripts/deploy/public-demo.ps1`) |
-| CI | 🟡 `.github/workflows/ci.yml` أُضيف 2026-10-28؛ أول تشغيل أخضر ينتظر الدفع |
-| OTP end-to-end / phone gate | ❌ blocked (B1) |
-| Uploads / history / account deletion / retention | ❌ stubs or missing (B3/B4/B10) |
-| License / legal pages accuracy | 🟡 MIT LICENSE file added 2026-10-28 (B5)؛ terms/privacy accuracy ما زالت ❌ (B12) |
-| Public deploy, TLS, Cloudflare, staging | ❌ durable deploy not executed (B2)؛ temporary Cloudflare quick-tunnel demo tooling جاهز (evidence عند التشغيل) |
-| Health endpoint / observability / external alerts | ❌ (B11) |
+| Code quality gates (typecheck/lint/tests/bundle) | ✅ verified: typecheck/lint exit 0، **371/371 اختبارًا في 26 ملفًا** (+1 حي مُتخطى)، build ناجح (23 مسارًا ديناميكيًا + 1 ثابت)، bundle clean (2026-10-28) |
+| Migrations on clean DB | ✅ verified: `001`→`006` ثم `no pending migrations` |
+| Backup/restore technique | ✅ verified (VACUUM INTO + integrity ok + restore drill محلي) |
+| Deploy artifacts (Docker/Caddy/nginx/systemd/scripts) | ✅ authoring complete; bash -n clean؛ backup.sh tested؛ public-demo tunnel tooling أُضيف وشُغِّل |
+| CI | 🟡 `.github/workflows/ci.yml` أُضيف 2026-10-28؛ أول تشغيل أخضر ينتظر الدفع (يُحدَّث بعد `gh run list`) |
+| OTP end-to-end / phone gate | ✅ محليًا: دورة حقيقية عبر 4jawaly حتى `phone_verified_at` (اختبار حي 1/1؛ `docs/evidence/sms-live.md`)؛ بوابة الجوال تعمل. 🟡 المتبقي: إثبات على staging/نطاق إنتاجي + delivery receipt/status callbacks (B8 جزئيًا مغلق) |
+| Uploads / history / account deletion / retention | 🟡 الرفع والسجل منفّذان ومُختبران (E2E)؛ link/تنزيل/حذف ملفات وحذف حساب وتطبيق الاحتفاظ ما زالت ❌ (B4/B10) |
+| License / legal pages accuracy | 🟡 MIT LICENSE file added 2026-10-28 (B5)؛ privacy/account صُحّحا ليطابقا الواقع؛ terms/legal review الكامل ما زال ❌ (B12) |
+| Public deploy, TLS, Cloudflare, staging | 🟡 عرض عام مؤقت عبر Cloudflare quick tunnel تم التحقق منه 13/13 (`docs/evidence/public-deployment.md`)؛ durable VPS/TLS/Cloudflare/staging ما زال ❌ (B2) |
+| Health endpoint / observability / external alerts | 🟡 `GET /api/health` منفّذ؛ APM/تنبيه خارجي/صفحة حالة ما زالت ❌ (B11) |
 | Payments | ❌ absent (B7) |
-| Live provider proof (OpenRouter/Anthropic) | ❌ none (B6) |
+| Live provider proof (OpenRouter/Anthropic) | ✅ Anthropic `claude-haiku-5-5` (433/6 توكن، $0.000046، 1935ms) وOpenRouter `cohere/north-mini-code:free` (178/152، 2678ms) في تحقق الإصدار (B6) |
