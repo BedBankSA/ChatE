@@ -25,10 +25,3 @@ export function removeSecretValues(json: string, secrets: string[]): string {
   }
   return text;
 }
-
-export function containsCanary(json: string, canaries: string[]): string | null {
-  for (const canary of canaries) {
-    if (canary && json.includes(canary)) return canary;
-  }
-  return null;
-}

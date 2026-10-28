@@ -25,7 +25,3 @@ export function isAdmin(user: { googleSub: string; email: string }, allow: { sub
   if (allow.subs.includes(user.googleSub)) return true;
   return allow.emails.includes(user.email.toLowerCase());
 }
-
-export function assertOwner(resourceUserId: string, sessionUserId: string): boolean {
-  return resourceUserId === sessionUserId;
-}

@@ -101,7 +101,3 @@ export function createOtpProvider(env: {
   if (env.provider === "http" && env.httpUrl) return new HttpOtpProvider(env.httpUrl, env.httpAuthorization ?? "");
   throw new AppError("مزود الرسائل غير مهيأ", "OTP_FAIL_CLOSED", 503);
 }
-
-export function maskPhone(phone: string): string {
-  return phone.length < 6 ? "***" : `${phone.slice(0, 4)}***${phone.slice(-2)}`;
-}

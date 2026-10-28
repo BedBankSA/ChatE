@@ -58,21 +58,6 @@ export function newNonce(): string {
   return randomBytes(24).toString("base64url");
 }
 
-export function assertSameOrigin(origin: string | null, appUrl: string): boolean {
-  if (!origin) return false;
-  try {
-    return new URL(origin).host === new URL(appUrl).host;
-  } catch {
-    return false;
-  }
-}
-
-export function assertProductionWeb(nodeEnv: string, appUrl: string): void {
-  if (nodeEnv === "production" && !appUrl.startsWith("https://")) {
-    throw new Error("APP_URL must be https in production");
-  }
-}
-
 /** A signed token is only trusted when every field has the expected runtime type. */
 function normalizePayload(value: unknown, nowSec: number): SessionPayload | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;

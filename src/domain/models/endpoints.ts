@@ -29,9 +29,6 @@ export function openRouterChatBody(input: {
   if (model.provider !== "openrouter" || model.outputModalities[0] !== "text") {
     throw new AppError("هذا النموذج ليس محادثة OpenRouter", "WRONG_ENDPOINT", 400);
   }
-  if (!model.id.endsWith(":free") && model.id !== "openrouter/free") {
-    throw new AppError("المسار المدفوع مرفوض", "PAID_ROUTE", 400);
-  }
   assertLive(model);
   const settings = buildMaxQualityFree(model);
   const cap = completionCap(model, estimateTokens(`${input.question}\n${input.evidenceText}`));
@@ -46,9 +43,6 @@ export function openRouterChatBody(input: {
   };
   if (settings.reasoning) body.reasoning = settings.reasoning;
   if (model.requiresUserId && input.userId) body.user = input.userId;
-  if ("models" in body || "provider" in body || "temperature" in body && model.id === "claude-haiku-5-5") {
-    throw new AppError("مسار غير مسموح", "PAID_ROUTE", 400);
-  }
   return { body, settings, maxTokens: cap.maxTokens };
 }
 
@@ -67,15 +61,6 @@ export function embeddingBody(model: ModelRecord, input: string): Record<string,
   return { model: selected.id, input, dimensions: selected.dimensions };
 }
 
-export function rerankBody(model: ModelRecord, query: string, documents: string[]): Record<string, unknown> {
-  const selected = assertSelectable(model.id);
-  assertLive(selected);
-  if (selected.outputModalities[0] !== "rerank") {
-    throw new AppError("النموذج ليس إعادة ترتيب", "WRONG_ENDPOINT", 400);
-  }
-  return { model: selected.id, query, documents };
-}
-
 export type DecisionQuestion =
   | { type: "noul"; instructions: string; criteria: { true: string; false: string } }
   | { type: "choice"; instructions: string; criteria: Record<string, string> }
@@ -92,15 +77,6 @@ export function decisionBody(
     throw new AppError("النموذج ليس قرارًا", "WRONG_ENDPOINT", 400);
   }
   return { model: selected.id, state, questions };
-}
-
-export function speechBody(model: ModelRecord, text: string): Record<string, unknown> {
-  const selected = assertSelectable(model.id);
-  assertLive(selected);
-  if (selected.outputModalities[0] !== "speech") {
-    throw new AppError("النموذج ليس كلامًا", "WRONG_ENDPOINT", 400);
-  }
-  return { model: selected.id, input: text };
 }
 
 export function planDefaultEmbedding():

@@ -115,44 +115,6 @@ export function queryUsers(db: DatabaseSync, query: UserListQuery): { rows: Admi
   return { rows: rows.map(mapUser), total, page: query.page, pageSize: query.pageSize };
 }
 
-export function queryUser(db: DatabaseSync, userId: string, query: UserListQuery): AdminUserRow | null {
-  const innerParams = [query.nowIso, query.from, query.to, query.from, query.to, query.from, query.to];
-  const row = db.prepare(`SELECT * FROM (${INNER_SQL}) listed WHERE id = ?`).get(...innerParams, userId);
-  return row ? mapUser(row) : null;
-}
-
-export function userAudit(db: DatabaseSync, userId: string): {
-  id: string;
-  actorId: string;
-  action: string;
-  at: string;
-  reason: string | null;
-  fromStatus: string | null;
-  toStatus: string | null;
-  quotaLimit: number | null;
-}[] {
-  const rows = db.prepare(`
-    SELECT id, admin_user_id, action, created_at, metadata
-    FROM admin_audit_events
-    WHERE target = ?
-    ORDER BY created_at DESC
-    LIMIT 50
-  `).all(userId);
-  return rows.map((row) => {
-    const metadata = parseMetadata(row.metadata);
-    return {
-      id: text(row, "id"),
-      actorId: text(row, "admin_user_id"),
-      action: text(row, "action"),
-      at: text(row, "created_at"),
-      reason: typeof metadata.reason === "string" ? metadata.reason : null,
-      fromStatus: typeof metadata.fromStatus === "string" ? metadata.fromStatus : null,
-      toStatus: typeof metadata.toStatus === "string" ? metadata.toStatus : null,
-      quotaLimit: typeof metadata.quotaLimit === "number" ? metadata.quotaLimit : null,
-    };
-  });
-}
-
 /** Only allowlisted identifiers reach the ORDER BY clause; nothing typed is interpolated. */
 function orderColumn(query: UserListQuery): string {
   const column = SORTS[query.sort];
@@ -264,12 +226,3 @@ function optionalNumber(row: Record<string, SQLOutputValue>, key: string): numbe
   return typeof value === "number" ? value : null;
 }
 
-function parseMetadata(value: SQLOutputValue | undefined): Record<string, unknown> {
-  if (typeof value !== "string") return {};
-  try {
-    const parsed = JSON.parse(value) as unknown;
-    return parsed && typeof parsed === "object" ? parsed as Record<string, unknown> : {};
-  } catch {
-    return {};
-  }
-}

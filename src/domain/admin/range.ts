@@ -1,6 +1,4 @@
 export const RIYADH = "Asia/Riyadh";
-export const PROVIDER_WINDOW_NOTE = "نافذة المزود بالتوقيت العالمي ولا تتبع مرشح تقرير الموقع";
-export const UTC_RIYADH_LABEL = "00:00 UTC تقابل 03:00 في Asia/Riyadh";
 
 export type RangeKey = "today" | "7d" | "30d" | "custom";
 
@@ -38,18 +36,6 @@ export function resolveRange(input: {
   if (key === "7d") return { ok: true, range: windowRange("7d", new Date(input.now.getTime() - 7 * DAY_MS).toISOString(), to) };
   if (key === "30d") return { ok: true, range: windowRange("30d", new Date(input.now.getTime() - 30 * DAY_MS).toISOString(), to) };
   return customRange(input.from, input.to);
-}
-
-export function providerDayWindow(now: Date): { from: string; to: string; resetUtc: string; resetLabel: string; note: string } {
-  const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const to = new Date(from.getTime() + DAY_MS);
-  return {
-    from: from.toISOString(),
-    to: to.toISOString(),
-    resetUtc: to.toISOString(),
-    resetLabel: UTC_RIYADH_LABEL,
-    note: PROVIDER_WINDOW_NOTE,
-  };
 }
 
 function riyadhStart(day: string): string {

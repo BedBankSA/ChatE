@@ -45,7 +45,6 @@ function textKind(bytes: Uint8Array, claimedName: string): DetectedKind {
   if (lower.endsWith(".tsv")) return "tsv";
   if (lower.endsWith(".csv")) return "csv";
   if (lower.endsWith(".md") || lower.endsWith(".markdown")) return "markdown";
-  if (text.includes("\t") && text.includes("\n") && lower.endsWith(".tsv")) return "tsv";
   return "text";
 }
 
@@ -68,25 +67,6 @@ export function parseJsonDocument(original: string): { ok: true; value: unknown;
   } catch (error) {
     return { ok: false, original, message: error instanceof Error ? error.message : "JSON" };
   }
-}
-
-export function parseDelimited(text: string, kind: "csv" | "tsv"): { encodingNote: string; delimiter: string; headers: string[]; rows: string[][] } {
-  const delimiter = kind === "tsv" ? "\t" : detectDelimiter(text);
-  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.length > 0);
-  const rows = lines.map((line) => splitLine(line, delimiter));
-  const headers = rows[0] ?? [];
-  return { encodingNote: "utf-8", delimiter, headers, rows: rows.slice(1) };
-}
-
-function detectDelimiter(text: string): string {
-  const line = text.split(/\r?\n/)[0] ?? "";
-  const commas = line.split(",").length;
-  const semis = line.split(";").length;
-  return semis > commas ? ";" : ",";
-}
-
-function splitLine(line: string, delimiter: string): string[] {
-  return line.split(delimiter).map((cell) => cell.trim());
 }
 
 function starts(bytes: Uint8Array, magic: number[]): boolean {

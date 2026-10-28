@@ -837,17 +837,3 @@ export const COMPARISON_PRESET = [
   "claude-haiku-5-5",
 ] as const;
 
-export const DEFAULT_EMBEDDING_ID = "nvidia/nemotron-3.5-embed-1b:free";
-export const RETRIEVAL_COMPARE_EMBEDDING_ID = "nvidia/nemotron-3.5-embed-8b:free";
-
-export function modelsForTask(taskType: string): ModelRecord[] {
-  return listSelectable().filter(
-    (item) =>
-      item.taskType === taskType &&
-      item.availability === "متاح" &&
-      item.policyAllowsTraffic &&
-      item.liveNetwork &&
-      item.provider === "openrouter" &&
-      item.id !== "openrouter/free",
-  );
-}

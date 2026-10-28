@@ -31,16 +31,6 @@ export function reserve(state: QuotaState, units: number):
   };
 }
 
-export function countBillableUnits(runs: { status: string; provider: "openrouter" | "anthropic" | "none" }[]): {
-  openRouter: number;
-  anthropic: number;
-} {
-  return {
-    openRouter: runs.filter((run) => run.status === "queued" && run.provider === "openrouter").length,
-    anthropic: runs.filter((run) => run.status === "queued" && run.provider === "anthropic").length,
-  };
-}
-
 export function retryDecision(attempt: number, status: number, retryAfterSec: number | null):
   | { retry: false }
   | { retry: true; waitMs: number } {

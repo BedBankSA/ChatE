@@ -30,14 +30,6 @@ export function withVerifiedPhone(profile: Profile, e164: string, verifiedAt: st
   return { ...profile, phoneE164: e164, phoneVerifiedAt: verifiedAt };
 }
 
-export function withDemographics(profile: Profile, input: { age?: number | null; city?: string | null }): Profile {
-  return {
-    ...profile,
-    age: input.age ?? null,
-    city: input.city?.trim() ? input.city.trim() : null,
-  };
-}
-
 export function profileGate(profile: Profile): { locked: false } | { locked: true; reason: "profile" | "phone" | "suspended" } {
   if (profile.status === "suspended") return { locked: true, reason: "suspended" };
   if (!profile.name || !profile.email) return { locked: true, reason: "profile" };
