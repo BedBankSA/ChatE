@@ -9,6 +9,7 @@ import {
 } from "@/server/comparisons/history";
 import { getDatabase } from "@/server/db/runtime";
 import { readGoogleSession } from "@/server/google-session";
+import { redirectUnverifiedToVerifyPhone } from "@/server/phone/gate";
 import { formatHistoryDate, truncateQuestion } from "@/app/history/format";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +43,9 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
     );
   }
 
+  // Product surfaces are gated: an unverified account verifies first, then
+  // returns to the same history URL.
+  await redirectUnverifiedToVerifyPhone("/history");
   const query = await searchParams;
   const before = firstValue(query.before);
   let rows: HistoryItem[] = [];

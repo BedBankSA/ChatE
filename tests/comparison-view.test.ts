@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  ALL_MODELS_FAILED_MESSAGE,
+  comparisonSettledNotice,
+  runStatusText,
   successSummaryText,
   successfulComparisonRuns,
   visibleComparisonRuns,
@@ -47,5 +50,22 @@ describe("results filtering (الزبدة فقط)", () => {
     expect(successSummaryText(4)).toBe("تم استلام 4 إجابات بنجاح.");
     expect(successSummaryText(4)).not.toContain("تعذر");
     expect(successSummaryText(4)).not.toContain("فشل");
+  });
+});
+describe("settled result notice", () => {
+  it("reports an all-failed comparison as an error, never as a success", () => {
+    const allFailed = [run("failed"), run("policy_blocked")];
+    expect(comparisonSettledNotice(allFailed)).toEqual({ kind: "error", text: ALL_MODELS_FAILED_MESSAGE });
+    expect(comparisonSettledNotice([])).toEqual({ kind: "error", text: "لم تصل إجابات ناجحة بعد." });
+    expect(comparisonSettledNotice([run("completed"), run("failed")])).toEqual({
+      kind: "success",
+      text: successSummaryText(1),
+    });
+  });
+
+  it("translates every stored status including the comparison-level closed state", () => {
+    expect(runStatusText("closed")).toBe("اكتمل");
+    expect(runStatusText("failed")).toBe("تعذر");
+    expect(runStatusText("something-new")).toBe("something-new");
   });
 });

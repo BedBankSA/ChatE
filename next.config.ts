@@ -8,14 +8,10 @@ const https =
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  serverExternalPackages: [
-    "exceljs",
-    "mammoth",
-    "word-extractor",
-    "unpdf",
-    "jszip",
-    "xlsx",
-  ],
+  // Only packages the server actually loads and that must stay outside the
+  // bundle. exceljs/xlsx were never dependencies and word-extractor is unused
+  // since the upload pipeline switched to mammoth for DOCX.
+  serverExternalPackages: ["mammoth", "unpdf", "jszip"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders(https, process.env.NODE_ENV !== "production") }];
   },

@@ -3,7 +3,10 @@ import { profileFromVerifiedClaims } from "@/domain/auth/google";
 import { newNonce, sessionCookie, signSession } from "@/domain/auth/session";
 import { gateTurnstile, readJson } from "@/server/guard";
 import { acceptGoogleIdentity, verifyGoogleIdToken } from "@/server/google-identity";
-import { upsertGoogleUser } from "@/server/db/profiles";
+import { readStoredProfile, upsertGoogleUser } from "@/server/db/profiles";
+import { verifyPhoneHref } from "@/domain/auth/phone-history";
+import { suspensionActive } from "@/domain/admin/suspension";
+import { readSessionStanding } from "@/server/account-access";
 import { getDatabase } from "@/server/db/runtime";
 import { runtimeEnv } from "@/server/db/settings";
 import { jsonError } from "@/server/http";
@@ -62,6 +65,28 @@ export async function POST(request: Request) {
   } catch {
     return jsonError("تعذر حفظ الحساب.", "account_store", 500);
   }
+  // A suspended account must be told so explicitly. Issuing a cookie here would
+  // bounce the customer between "/" and "/workspace" with no message, because
+  // every session read fails closed (src/domain/auth/session.ts storedSessionAllows).
+  try {
+    const standing = readSessionStanding(getDatabase(), profile.googleSub);
+    if (standing && suspensionActive(standing.status, standing.suspendedUntil, Date.now())) {
+      return jsonError("حسابك موقوف. تواصل مع الدعم لمعرفة سبب الإيقاف.", "suspended", 403);
+    }
+  } catch {
+    // The upsert above already succeeded; a failed standing read must not mint a
+    // session that skips the suspension check, so fail closed as a store error.
+    return jsonError("تعذر التحقق من حالة الحساب. أعد المحاولة لاحقًا.", "account_store", 500);
+  }
+  // Seamless onboarding: a brand-new (or still-unverified) account goes straight
+  // to the phone gate instead of landing on a workspace it cannot use.
+  let next = "/workspace";
+  try {
+    const stored = readStoredProfile(getDatabase(), profile.googleSub);
+    if (!stored?.phoneVerifiedAt) next = verifyPhoneHref("/workspace");
+  } catch {
+    next = "/workspace";
+  }
   const nowSec = Math.floor(Date.now() / 1000);
   const token = signSession(
     {
@@ -75,7 +100,7 @@ export async function POST(request: Request) {
   );
   const response = NextResponse.json({
     ok: true,
-    data: { name: profile.name, email: profile.email },
+    data: { name: profile.name, email: profile.email, next },
     error: null,
   });
   const https = new URL(runtime.APP_URL ?? "http://localhost:3000").protocol === "https:";

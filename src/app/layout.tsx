@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { cookies } from "next/headers";
 import Link from "next/link";
+import { VerifyPhoneBanner } from "@/components/verify-phone-banner";
 import { currentAdmin } from "@/server/admin/current";
 import { readGoogleSession } from "@/server/google-session";
+import { appPhoneStateSafe } from "@/server/phone/state";
 import { runtimeEnv } from "@/server/db/settings";
 import "./globals.css";
 
@@ -24,6 +26,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const theme = (await cookies()).get("chate_theme")?.value === "dark" ? "dark" : "light";
   const session = await readGoogleSession();
   const admin = session ? await currentAdmin() : null;
+  // Persistent activation banner: an old half-registered account keeps a visible
+  // path to /verify-phone on every page until the phone is verified.
+  const phoneState = session ? appPhoneStateSafe(session.userId) : null;
   const nextThemeLabel = theme === "dark" ? "التبديل إلى المظهر الفاتح" : "التبديل إلى المظهر الداكن";
   const runtime = runtimeEnv();
   const publicConfig = JSON.stringify({
@@ -49,13 +54,31 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </div>
           <nav className="site-header-nav" aria-label="التنقل">
             {session ? <Link href="/workspace">مساحة العمل</Link> : null}
+            {session ? <Link href="/account">حسابي</Link> : null}
+            {session && phoneState && !phoneState.phoneVerifiedAt ? (
+              <Link href="/verify-phone">تفعيل الجوال</Link>
+            ) : null}
             {admin ? <Link href="/admin">الإدارة</Link> : null}
             <Link href="/history">السجل</Link>
             <Link href="/privacy">الخصوصية</Link>
             <Link href="/terms">الشروط</Link>
+            {session ? (
+              <form className="nav-form" action="/api/auth/logout" method="post">
+                <button className="nav-button" type="submit">
+                  تسجيل الخروج
+                </button>
+              </form>
+            ) : null}
           </nav>
         </header>
-        <main id="content">{children}</main>
+        <main id="content">
+          {session && phoneState && !phoneState.phoneVerifiedAt ? (
+            <div className="shell">
+              <VerifyPhoneBanner />
+            </div>
+          ) : null}
+          {children}
+        </main>
       </body>
     </html>
   );

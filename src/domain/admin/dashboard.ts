@@ -97,7 +97,15 @@ export type AdminDashboardData = {
 
 export function serviceConfigured(service: ServiceId, env: Record<string, string | undefined>): boolean {
   if (service === "openrouter") return Boolean(env.OPENROUTER_API_KEY?.trim());
-  if (service === "turnstile") return Boolean(env.TURNSTILE_SECRET_KEY?.trim());
+  // A Turnstile widget needs the public site key in the browser AND the secret on
+  // the server; reporting "configured" with only one half sent operators hunting
+  // for a client error that could never succeed.
+  if (service === "turnstile") {
+    return Boolean(
+      env.TURNSTILE_SECRET_KEY?.trim() &&
+        (env.TURNSTILE_SITE_KEY?.trim() || env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()),
+    );
+  }
   if (service === "google") return Boolean(env.GOOGLE_CLIENT_ID?.trim());
   // One predicate for the page, the model gate and the OTP route: a workable
   // SMS_PROVIDER (or legacy OTP_PROVIDER=http) means OTP can deliver a code.
@@ -161,6 +169,8 @@ export function auditActionLabel(action: string): string {
   if (action === "quota") return "تعديل الحصة";
   if (action === "role") return "تعديل الدور";
   if (action === "setting") return "تعديل إعداد";
+  if (action === "phone") return "تعديل الجوال";
+  if (action === "unverify") return "إلغاء توثيق الجوال";
   if (action === "view") return "عرض";
   return "إجراء";
 }

@@ -105,6 +105,45 @@ export function countRecentSends(db: DatabaseSync, userId: string, sinceMs: numb
 }
 
 /**
+ * Sends aimed at one target number inside the rolling window, across accounts.
+ * The per-user cap alone would still let many accounts steer SMS at one victim
+ * number; this caps that abuse and the carrier bill.
+ */
+export function countRecentSendsToPhone(db: DatabaseSync, phoneE164: string, sinceMs: number): number {
+  const phone = requirePhone(phoneE164);
+  const since = requireInteger(sinceMs, "OTP_SINCE", 0, MAX_TIMESTAMP_MS);
+  const row = db
+    .prepare("SELECT COUNT(*) AS total FROM otp_challenges WHERE phone_e164 = ? AND created_at >= ?")
+    .get(phone, new Date(since).toISOString());
+  if (!row) return 0;
+  return numberField(row as Record<string, SQLOutputValue>, "total");
+}
+
+/**
+ * Atomically claims one verification-attempt slot. Returns the new attempt
+ * number, or null when the challenge is already at the cap (or consumed).
+ *
+ * A single conditional UPDATE is used on purpose: a read-then-increment pattern
+ * let N concurrent requests each pass the stale "attempts < 5" check before any
+ * increment landed (TOCTOU), which is a brute-force hole. SQLite serializes
+ * writers, so this grants at most OTP_MAX_ATTEMPTS slots per challenge even
+ * under a parallel burst.
+ */
+export function claimAttempt(db: DatabaseSync, challengeId: string, maxAttempts: number): number | null {
+  const id = requireText(challengeId, "OTP_ID", 64);
+  const max = requireInteger(maxAttempts, "OTP_ATTEMPTS_MAX", 1, 1000);
+  const result = db
+    .prepare("UPDATE otp_challenges SET attempts = attempts + 1 WHERE id = ? AND consumed_at IS NULL AND attempts < ?")
+    .run(id, max);
+  if (changeCount(result) !== 1) return null;
+  const row = db.prepare("SELECT attempts FROM otp_challenges WHERE id = ?").get(id) as
+    | Record<string, SQLOutputValue>
+    | undefined;
+  if (!row) throw new StoreError("OTP_ROW");
+  return numberField(row, "attempts");
+}
+
+/**
  * Marks this user's phone verified. Only the current user's profile row is
  * touched: a shared E.164 (family phone) does not transfer verification between
  * accounts, because verification always follows this user's own challenge.

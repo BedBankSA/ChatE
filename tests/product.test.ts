@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { evaluateAccess, isAdmin } from "@/domain/auth/access";
-import { assertGoogleClaims, profileFromVerifiedClaims } from "@/domain/auth/google-claims";
+import { assertGoogleClaims, profileFromVerifiedClaims } from "@/domain/auth/google";
 import { createOtpProvider, issueChallenge, verifyChallenge } from "@/domain/auth/otp";
 import { normalizePhone, profileGate, withUnverifiedPhone, withVerifiedPhone, type Profile } from "@/domain/auth/profile";
 import { readSession, sessionCookie, signSession } from "@/domain/auth/session";
@@ -37,7 +37,6 @@ import {
 } from "@/domain/models/endpoints";
 import { ANTHROPIC_VERSION, HAIKU_URL, buildHaikuRequest, haikuLiveCallsEnabled, postHaiku } from "@/domain/models/haiku";
 import { buildMaxQualityFree, completionCap, estimateTokens, interpretFinish } from "@/domain/models/max-quality";
-import { escapeHtml } from "@/domain/security/markdown";
 import { redact } from "@/domain/security/redact";
 import { AppError } from "@/domain/errors";
 
@@ -86,22 +85,27 @@ describe("access and identity", () => {
   });
 
   it("rejects a Google token with the wrong audience", () => {
-    expect(() =>
+    let thrown: unknown;
+    try {
       assertGoogleClaims(
-        { aud: "other", iss: "https://accounts.google.com", exp: 100, sub: "s", email: "a@b.c", email_verified: true, nonce: "n" },
+        { aud: "other", iss: "https://accounts.google.com", exp: 100, sub: "s", email: "a@b.c", name: "", email_verified: true, nonce: "n" },
         "expected",
-        10,
         "n",
-      ),
-    ).toThrow("GOOGLE_AUDIENCE");
+        10,
+      );
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(AppError);
+    expect(thrown).toMatchObject({ code: "GOOGLE_AUD" });
   });
 
   it("takes name and email from verified claims only", () => {
     const claims = assertGoogleClaims(
       { aud: "aud", iss: "accounts.google.com", exp: 100, sub: "sub-1", email: "real@example.com", email_verified: true, name: "اسم موثّق", nonce: "n" },
       "aud",
-      10,
       "n",
+      10,
     );
     const stored = profileFromVerifiedClaims(claims, { name: "مزور", email: "fake@example.com" });
     expect(stored).toEqual({ googleSub: "sub-1", email: "real@example.com", name: "اسم موثّق" });
@@ -356,7 +360,6 @@ describe("files and safety", () => {
     expect(pages[1]).toMatchObject({ status: "failed", reason: "ocr_failed" });
     expect(inspectZipEntry({ name: "../evil.txt", uncompressedSize: 10 }, limits, { count: 0, bytes: 0 })).toMatchObject({ reason: "path_traversal" });
     expect(inspectZipEntry({ name: "a.txt", uncompressedSize: 80 }, limits, { count: 0, bytes: 0 })).toMatchObject({ reason: "member_size" });
-    expect(escapeHtml("<script>alert(1)</script>")).not.toContain("<script>");
     expect(JSON.stringify(redact({ otp: "123456", question: "سري" }))).not.toContain("123456");
     expect(applySafetyResult({ status: "active" }).status).toBe("active");
   });

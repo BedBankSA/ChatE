@@ -1,0 +1,97 @@
+# تقرير تدقيق الأداء وقاعدة البيانات — ChatE (task-3)
+
+- **الوكيل:** audit-perf (database-optimizer + performance-reviewer)
+- **القائد:** lead — الفرع: `fix/p0-phone-otp-audit`
+- **لقطة التدقيق:** 2026-10-29 ~07:55 (+03). ملاحظة: ملفات `src/server/phone/**` و`src/app/api/otp/**` و`migrations/008_phone_audit.sql` و`src/server/admin/phones.ts` كانت تُعدَّل أثناء التدقيق (إصلاح P0 متوازٍ)؛ أرقام الأسطر أعلاه حديثة لكنها قد تنزلق لاحقًا.
+- **المنهجية:** قراءة كاملة لـ `src/server/db/**` و`comparisons/**` و`admin/**` و`files/**` و`src/app/api/**` و`migrations/**` و`scripts/worker.ts`؛ ثم تشغيل مخطط الهجرات 001→008 على SQLite 3.53.4 عبر `node:sqlite` في الذاكرة مع بيانات صناعية (3,000 مستخدم، 8,000 مقارنة، 24,000 تشغيل، 40,000 عملية إحصاء، 5,000 مهمة، 200,000 تحدي OTP) وقياس `EXPLAIN QUERY PLAN` + زمن التنفيذ قبل/بعد كل إصلاح. **لم يُشغَّل build/typecheck/tests** (node_modules قيد التثبيت، ممنوع npm) ولا استُخدمت قاعدة إنتاج.
+
+## 1) الملخص التنفيذي
+
+1. **P1:** صفحة مستخدمي الإدارة (`src/server/admin/users.ts:56-118`) تسقط عند غياب `ANALYZE`/فهرس مركّب إلى خطة تفحص `operation_stats` لنطاق كل المستخدمين لكل مستخدم — قياس **53–791 ms لكل 25 صفًا** على 3 آلاف مستخدم، تهبط إلى **3–8 ms** بعد إضافة فهرس مركّب واحد أو ANALYZE. لأن الاتصال `DatabaseSync` متزامن (`src/server/db/runtime.ts:5-18`)، هذا يجمّد حلقة الأحداث لكل الطلبات بما فيها health/polling.
+2. **P2:** تضخيم كتابات الإحصاء: كل `recordOperation` = 4 كتابات auto-commit، واثنتان منها (`operation_buckets`، `latency_histogram`) **لا تُقرأ في أي مكان**؛ مقارنة 4 نماذج ≈ **33 التزامًا كتابيًا** منفصلًا.
+3. **P2:** لا مشغّل احتفاظ: `retention_settings` يُكتب ولا يُقرأ، و`scripts/worker.ts:22-24` حلقة نائمة فقط → نمو غير محدود لـ operation_stats/output_text/otp_challenges/jobs/sessions/usage_reservations.
+4. **P2:** `countRecentSendsToPhone` (`src/server/otp/service.ts:112-120`، يُنادى في كل إرسال OTP) يمسح `otp_challenges` كاملًا: **28.0 ms @200k صف** → 0.0 ms بفهرس `(phone_e164, created_at)` غير موجود حتى الآن.
+5. **P2:** طلب واحد لـ `/api/admin/overview` ينفّذ ≈ **38 استعلامًا** (23 في overview + 13 من `runtimeEnv()` + 2 مصادقة)، و`/api/models` العامة تستدعي `runtimeEnv()` = 13 استعلامًا لكل تحميل.
+6. **P2:** `claimComparisonJob` يعيد فتح أي مهمة أقدم من 10 دقائق بينما مهلة النموذج تصل إلى 30 دقيقة (`store.ts:381-394` مقابل `142-159`) → خطر تنفيذ مزدوج وتكلفة مزوّد مضاعفة.
+
+## 2) جدول النتائج (Findings)
+
+| ID | الخطورة | الملف:السطر | الوصف | الأثر/القياس | الإصلاح المقترح | يحتاج اختبار |
+|---|---|---|---|---|---|---|
+| F1 | **P1** | `src/server/admin/users.ts:56-104,110-118` | 3 استعلامات مترابطة لكل صف داخل `INNER_SQL`؛ بلا `sqlite_stat1` تختار الخطة `operation_stats_latency_idx (operation_type, occurred_at)` التي لا تحوي `user_id` فتمسح نطاق كل المستخدمين لكل مستخدم. | 53–791 ms لصفحة 25 صفًا (3k مستخدم/40k عملية) → 3–8 ms بفهرس `(user_id,operation_type,occurred_at)` أو بعد ANALYZE (×17–98). يحجب كل الطلبات بسبب التزامن. | هجرة 009: فهرس مركّب + `ANALYZE`/PRAGMA optimize دوري (خطة §4). | نعم |
+| F2 | P2 | `src/server/admin/users.ts:109-118` | استعلام count يعيد تشغيل `INNER_SQL` كاملًا؛ `ORDER BY`/فلترة على أعمدة مشتقة (`status_label`، counts) + `OFFSET` تمنع الفهارس وتفرض TEMP B-TREE. | count 3.7 ms@3k (لا يقيّم subqueries بفضل covering scan) لكنه مسح كامل يتضاعف مع المستخدمين؛ بحث `LIKE '%q%'` غير القابل للفهرسة يبقى O(N). | فصل count عن الصفحة، cursor/keyset بدل OFFSET، إعادة صياغة فلاتر الحالة على `u.status`/`suspended_until` بدل العمود المشتق، و/أو تجميع مسبق. | نعم |
+| F3 | P2 | `src/server/otp/service.ts:112-120` + `src/app/api/otp/send/route.ts:102` | `countRecentSendsToPhone` يفحص `phone_e164`+نطاق زمني بلا فهرس؛ 008 أضاف فهرس `(user_id,created_at)` فقط. | 28.0 ms @200k تحدي → 0.0 ms بفهرس `(phone_e164, created_at)`؛ ينمو خطيًا مع جدول بلا احتفاظ. | هجرة 009: `otp_challenges (phone_e164, created_at)`. | نعم |
+| F4 | P2 | `scripts/worker.ts:22-24` + `migrations/001_init.sql:204-209,231` | لا مشغّل احتفاظ: `retention_settings` (90/30 يومًا) لا يُقرأ في src؛ لا حذف لأي جدول تشغيلي. | نمو خطي دائم لكل مقارنة/عملية؛ قاعدة صناعية 20.5 MB لـ8k مقارنة/40k عملية. يرفع زمن النسخ وANALYZE وWAL والفحوص. | `pruneRetention(db, now)` يوميًا في العامل: comparisons قديمة (CASCADE)، operation_stats/buckets/histogram، jobs/usage_reservations المكتملة، otp_challenges المنتهية، sessions المنتهية؛ استثناء phone_history (append-only) وأحداث الإدارة حسب سياسة. | نعم |
+| F5 | P2 | `src/server/admin/operations.ts:38-71,199-248,73-96,134-148` | كل `recordOperation` = INSERT stats + UPSERT bucket + حتى 2 UPSERT histogram (4 auto-commit)؛ `operation_buckets`/`latency_histogram` لا تُقرأ (grep src: كتابة فقط). | ~33 التزامًا كتابيًا لمقارنة 4 نماذج (5 للقبول + ~7/تشغيل) على اتصال واحد؛ فشل جزئي يترك عدادات غير متسقة. | لفّ body في `immediateTransaction` واحدة، وإسقاط كتابات bucket/histogram غير المقروءة أو إضافة قارئ لها فعليًا؛ تجميع إحصاء المقارنة في معاملة واحدة بعد اكتمال التشغيلات. | نعم |
+| F6 | P2 | `src/server/comparisons/store.ts:381-394` مقابل `142-159` | `claimComparisonJob` يعيد فتح المهمة إن تجاوز `claimed_at` 10 دقائق، بينما `MODEL_TIMEOUT_MS` يُسمح حتى 30 دقيقة + 30 ث مهلة. | تشغيل مزدوج محتمل لمقارنة بطيئة → نداءات مزوّد وخصم/إحصاء مكرر. | اشتقاق عتبة الاستيلاء من `staleRunDeadlineMs()` (أو heartbeat لكل تشغيل) وعدم إعادة فتح مهمة حية. | نعم (تزامن) |
+| F7 | P2 | `src/server/comparisons/store.ts:313-338` + `history.ts:167-175` | `readAttachments` تقرأ `evidence_snapshots.payload` كاملًا (فيه `evidenceText` حتى 120,000 محرف) وتُحلّل JSON كاملًا لاستخراج `attachmentIds` فقط؛ تُنفَّذ في كل GET للمقارنة وفي تفاصيل السجل. | إعادة قراءة/تحليل عشرات–مئات KB كل 1.5 ثانية أثناء polling (`src/components/workspace.tsx:337`) لكل مقارنة نشطة. | عمود صغير مستقل `attachment_ids` في evidence_snapshots (backfill بـ json_extract) أو `json_extract` عند القراءة، أو نقل الحالة لـ SSE. | نعم |
+| F8 | P2 | `src/server/db/settings.ts:34-55` + `src/app/api/models/route.ts:10` | `runtimeEnv()` يقرأ 11 مفتاحًا (+2 قراءات إضافية) = 13 استعلامًا نقطيًا في كل نداء؛ يُنادى في models العامة وOTP send/verify وصفحات/مسارات الإدارة. | ≈13 استعلامًا إضافيًا لكل طلب؛ `/api/models` تُطلب عند كل تحميل لمساحة العمل. | استعلام واحد `SELECT key,value FROM system_settings WHERE key IN (...)` + `cache()` لكل طلب (مع بقاء التغيير فوريًا). | نعم |
+| F9 | P2 | `src/server/admin/overview.ts:126-159,217,221-233,309` + `src/app/api/admin/overview/route.ts:13` | ≈38 استعلامًا لتحميل واحد: 23 في overview (منها `admin_storage_totals` يمسح files كاملًا، وcounters متعددة) + 13 runtimeEnv + 2 مصادقة؛ لا تجميع ولا كاش قصير. | زمن مقبول اليوم (قاعدة صغيرة) لكنه يتضاعف مع الجداول؛ كل statement يملك تجهيزًا وتزامنًا على الحلقة. | دمج عدادات overview في استعلامات UNION/CTE قليلة، كاش 5–15 ثانية للعدادات، وإصلاح F8؛ حساب `phoneUnverified` عبر فهرس جزئي. | نعم |
+| F10 | P2 | `src/server/admin/users.ts:169-171` (و`INNER_SQL` Join) | فلترة الجوال في قائمة الإدارة لا تستخدم `profiles_phone_idx` الجديد (008:49): EXPLAIN يظهر `SCAN users` ثم JOIN بالـPK ثم تطبيق فلتر الجوال على الصفوف الناتجة. | فلترة جوال O(N_users) رغم وجود الفهرس؛ ينمو مع المستخدمين. | استعلام أولي `SELECT user_id FROM profiles WHERE phone_e164 = ?`/prefix ثم `u.id IN (...)` — أو إبقاء القيد وتوثيق القبول. | نعم |
+| F11 | P3 | `src/server/admin/overview.ts:221-233` + `migrations/005_indexes.sql:12` | آخر 20 حدث تدقيق: `ORDER BY created_at DESC LIMIT 20` بلا فهرس على created_at (005 أضاف (target,created_at) فقط) → SCAN + TEMP B-TREE. | 0.6 ms@3,000 حدث، ينمو خطيًا مع كل إجراء إداري. | هجرة 009: `admin_audit_events (created_at)`. | نعم |
+| F12 | P3 | `src/server/db/jobs.ts:7-24,67-74` | `(? IS NULL OR queue = ?)` يمنع SQLite من استخدام عمود queue في الفهرس؛ الخطة `SCAN jobs_queued_idx + TEMP B-TREE` للقيمتين (تحققت بـ EXPLAIN). `requeueStaleClaims` يمسح jobs كاملًا. | claim 0.9 ms@~1000 queued؛ requeue 0.4 ms@5,000 (يعمل عند إقلاع العامل فقط). | نسختان من SQL (queue محدد / غير محدد) ليتحقق الفهرس؛ فهرس جزئي `(claimed_at) WHERE status='active'`. | نعم |
+| F13 | P3 | `src/server/comparisons/history.ts:45-81` | `GROUP BY` + `ORDER BY` على TEMP B-TREE؛ إضافة `(user_id,created_at,id)` **لم تحسّن**: 5.6→5.9 ms@2000 مقارنة/مستخدم لأن الخطة تبدأ من UNIQUE(user_id,idempotency_key). | أثر ضئيل اليوم؛ يظهر مع مستخدم ثقيل جدًا. | إعادة كتابة: صفحة IDs من comparisons أولًا بـ keyset ثم تجميع model_runs؛ أو تجميع counts في جدول ملخص. | نعم |
+| F14 | P3 | `src/server/db/connection.ts:16-19` | لا `cache_size`/`temp_store`/`mmap_size`: الافتراضي cache 2MB وtemp_store=file → فرز TEMP B-TREE (F1/F2/F13) تكتب على القرص. | تحسين متوقع مع نمو القاعدة؛ لم يُقَس زمنيًا هنا (كان سيحتاج ملف DB/WAL). | `PRAGMA cache_size=-16000`، `temp_store=MEMORY`، `mmap_size=268435456`، وcheckpoint دوري `wal_checkpoint(PASSIVE)` في العامل + `journal_size_limit`. | نعم |
+| F15 | P3 | `src/server/files/repository.ts:127-158` | N+1 محدود: لكل مرفق (≤5) 4 استعلامات (`readOwnedFileRow`، documents، chunks، extraction_jobs) = حتى ~20 استعلامًا لكل POST مقارنة. | زمن صغير لكنه مسار حار ومتكرر؛ قابل للدمج. | جلب files/ documents/ jobs دفعة واحدة `IN (...)` + Map، ثم chunks لكل document. | نعم |
+| F16 | P3 | `src/app/api/uploads/route.ts:129-158` | استخراج PDF/DOCX متزامن داخل الطلب + `persistUpload` معاملة مستقلة لكل ملف (حتى 5) | الطلب يجمّد حلقة الأحداث أثناء تحليل الملفات، و5 التزامات كتابة متتالية. | معاملة واحدة للدفعة (مع مقايضة atomicity)، ونقل الاستخراج لعامل/طابور خلفي؛ حدود الحجم قائمة بالفعل. | نعم |
+| F17 | P3 | `package.json:17-34` + `next.config.ts:8-15` | 8 حزم runtime غير مستوردة في src/tests/scripts: `@radix-ui/react-slot`، `@tanstack/react-table`، `@tremor/react`، `class-variance-authority`، `clsx`، `tailwind-merge`، `word-extractor`، `zod` (jszip/mammoth/unpdf **مستوردة** dynamic ولا تُحذف). | **صفر بايت** من حزمة المتصفح (غير مستوردة)؛ الأثر تثبيت/CI/صورة وسطح هجوم فقط. | حذف الثماني، وتنظيف `serverExternalPackages` من غير المستخدم (`exceljs/xlsx` ليستا في package.json أصلًا). | لا (تحقق `grep`) |
+| F18 | P3 | `migrations/008_phone_audit.sql:49-52,56-93` + `src/server/db/migrate.ts:16-20` | هجرة 008 تنفّذ backfill لجدولي profiles/otp_challenges + 6 فهارس **داخل معاملة ملف واحدة**؛ تُشغَّل عند أول طلب (migrate عند `getDatabase`). و`profiles_unverified_idx (user_id) WHERE phone_verified_at IS NULL` غير مستخدم في خطط الشاشات الحالية (تحققت: SCAN users). | على قاعدة كبيرة قد يطول أول طلب/الإقلاع ويحجز قفل الكتابة؛ تكلفة كتابة صغيرة للفهرس الجزئي. | اختبار 008 على نسخة من قاعدة بحجم إنتاجي؛ إن لزم تقسيم الـbackfill على دفعات (هجرات إضافية)؛ حذف `profiles_unverified_idx` إن ثبت عدم استخدامه. | نعم |
+
+> **لا يوجد Finding من فئة P0 في هذا النطاق.** ما تم التحقق من سلامته: WAL+`busy_timeout`+`BEGIN IMMEDIATE` (`connection.ts:16-19`، `transaction.ts:6-19`)، حدود `Map` للمعدل في الذاكرة بسقف 4096 وpruning (`src/server/guard.ts:125,154-195`)، ذاكرة Turnstile بسقف 2048 (`src/server/turnstile-replay.ts:9,86-93`)، وفهارس 005/006 تخدم قراءات model_runs/evidence/sessions/usage/files/audit-target.
+
+## 3) تفاصيل أهم النتائج
+
+### F1 — انهيار خطة صفحة مستخدمي الإدارة (P1)
+`INNER_SQL` (users.ts:56-104) فيه 3 subqueries مترابطة لكل صف: `COUNT question`، `COUNT generation`، و`SUM tokens` من operation_stats. مع صفر إحصاءات مُحلَّلة (`sqlite_stat1` غير موجود، ولا `ANALYZE` في الهجرات أو الكود)، يختار المخطط للاستعلامين الأولين `operation_stats_latency_idx (operation_type, occurred_at, completion_ms)` — أي أنه لكل مستخدم يمسح **كل** عمليات النوع خلال النطاق المطلوب (7 أيام افتراضيًا) بدل عمليات المستخدم نفسه. على 3,000 مستخدم/40,000 عملية قِست 53.5–790.6 ms لصفحة 25 صفًا. أضفت في المحاكاة فهرساً واحداً `operation_stats (user_id, operation_type, occurred_at)` **دون ANALYZE** فصار 3.0 ms، والخطة أصبحت `SEARCH ... USING COVERING INDEX`. الفهرس المركّب يجعل الخطة حتمية حتى قبل ANALYZE، وANALYZE وحده أعطى تحسناً مشابهاً (8.4 ms في محاكاة أخرى)؛ الأنسب: فهرس مركّب + ANALYZE دوري. `COUNT(*)` وحده لم يكن متأثراً (3.7 ms — يقرأ من `INNER_SQL` كـcovering scan دون تقييم subqueries)، لذا الأثر مضاعف عند الجمع بينهما في كل تحميل.
+**الإصلاح المقترح (هجرة 009، آمنة وبدون مسح بيانات):**
+```sql
+CREATE INDEX IF NOT EXISTS operation_stats_user_type_time_idx
+  ON operation_stats (user_id, operation_type, occurred_at);
+CREATE INDEX IF NOT EXISTS otp_challenges_phone_created_idx
+  ON otp_challenges (phone_e164, created_at);
+CREATE INDEX IF NOT EXISTS admin_audit_created_idx
+  ON admin_audit_events (created_at);
+CREATE INDEX IF NOT EXISTS jobs_active_claimed_idx
+  ON jobs (claimed_at) WHERE status = 'active';
+ANALYZE;
+```
+ويُستحسن تشغيل `PRAGMA optimize` (أو ANALYZE خفيف) دوريًا من العامل بعد نمو البيانات، وربط ترقية `operation_stats` بمؤشر `(user_id, operation_type, occurred_at)` بدل الاعتماد على الإحصاءات وحدها.
+
+### F3 — مسح otp_challenges لعدّ الإرسال لكل رقم (P2)
+008 أضاف `otp_challenges_user_created_idx` (لقراءة أحدث تحدي لكل مستخدم — تحققت: SEARCH فوري عند 200,000 صف). لكن مسار الإرسال ينفّذ أيضاً `countRecentSendsToPhone` (service.ts:112-120) للفترة الزمنية: قياس 28.0 ms @200k صف، و0.0 ms بعد فهرس `(phone_e164, created_at)`. الجدول بلا احتفاظ → يكبر مع كل رمز يُرسل، ويُنادى مرتين تقريباً لكل إرسال (مع countRecentSends للمستخدم). أضف الفهرس ضمن 009.
+
+### F4/F5 — النمو غير المحدود وتضخيم الكتابة (P2)
+`retention_settings` يُنشأ ويُبذر (001:204-209,231) لكن grep على src لا يجد له قارئاً؛ `scripts/worker.ts` يكتفي بـ`requeueStaleClaims` عند الإقلاع ثم حلقة نائمة 1 ثانية. في الوقت نفسه يكتب المسار الحار 4 التزامات auto-commit لكل `recordOperation`، واثنان منها لجداول `operation_buckets`/`latency_histogram` التي **لا يقرأها أي كود** (تحققت repo-wide؛ 004 أنشأها لأن كتاباتها كانت تفشل صامتة). عملياً: مقارنة 4 نماذج = 5 (قبول) + 4×~7 (تشغيل) ≈ 33 التزاماً، نصفها تقريباً بلا قارئ. الإصلاح: (أ) معاملة واحدة داخل `recordOperation` و`recordAcceptedComparison`؛ (ب) إسقاط كتابتي bucket/histogram أو استخدامهما في لوحة الإدارة؛ (ج) `pruneRetention` يومية في العامل تغطي comparisons (CASCADE إلى model_runs/evidence_snapshots)، operation_stats/buckets/histogram، jobs، usage_reservations، otp_challenges، sessions، مع WAL checkpoint.
+
+### F6 — عتبة استيلاء المهمة أقصر من مهلة النموذج (P2)
+`claimComparisonJob` (store.ts:381-394) يعيد ضبط أي مهمة `active` أقدم من 10 دقائق إلى `queued` ثم يستولى عليها. لكن مهلة تنفيذ النموذج المسموحة `MODEL_TIMEOUT_MS` تصل إلى 1,800,000 ms = 30 دقيقة (store.ts:142-159). سيناريو: نموذج بطيء/إعادة محاولة تتجاوز 10 دقائق → طلب polling جديد يعيد فتح المهمة ويشغّل نفس المقارنة ثانيةً → نداءات مزوّد وإحصاء/خصم مزدوج. الإصلاح: استخدام `staleRunDeadlineMs()` كعتبة، أو كتابة heartbeat (عمود `updated_at`/claims) في أثناء التشغيل، واختبار تزامن.
+
+### F7 — قراءة evidence payload الكامل في كل polling (P2)
+`readComparison` (store.ts:112-134) تُنادى من GET `/api/comparisons/[id]`؛ داخل `readAttachments` (313-338) يُقرأ `payload` كاملًا من evidence_snapshots (فيه `question`+`evidenceText` حتى 120,000 محرف) ثم `JSON.parse` لاستخراج `attachmentIds` فقط. مع polling كل 1.5 ثانية (workspace.tsx:337) و8 مقارنات نشطة ≈ 5–6 قراءات/استعلامات و~MBs نص/ثانية، والرسالة نفسها تُرسل كاملة في JSON الرد. الإصلاح الأرخص: عمود `attachment_ids TEXT` صغير (backfill عبر `json_extract`) أو `json_extract(payload,'$.attachmentIds')`؛ الأفضل لاحقاً SSE/streaming بدل polling (يسبق قياسه في docs/audit).
+
+### F8/F9 — تعدد استعلامات الإعدادات واللوحة (P2)
+`runtimeEnv()` (settings.ts:34-55) يمر على `SETTING_KEYS` (11 مفتاحًا في `src/domain/admin/settings.ts:7-19`) بعمل `readSystemSettingRow` لكل مفتاح ثم قراءتين إضافيتين = **13 استعلامًا** في كل نداء؛ يُستدعى في `/api/models:10` (عام، كل تحميل لمساحة العمل)، OTP send/verify، وصفحات/مسارات الإدارة. لوحة `/api/admin/overview` تجمع فوق ذلك ≈23 استعلامًا (منها `admin_storage_totals` مسح كامل files) +13+2 ≈ **38 استعلامًا** لكل تحميل. تُقاس اليوم بالميلي ثانية، لكنها كلها على حلقة واحدة وتنمو مع البيانات. الإصلاح: استعلام `IN (...)` واحد لـ runtimeEnv + React `cache()` لكل طلب، ودمج عدادات overview في 2–3 استعلامات مجمّعة مع كاش قصير.
+
+### F10 — فهرس الجوال الجديد لا يخدم فلترة الإدارة (P2)
+008:49 أضاف `profiles_phone_idx`؛ تحققت أن `findVerifiedPhoneOwner` (audit.ts:135-147) يستخدمه: `SEARCH profiles USING INDEX profiles_phone_idx (phone_e164=?)`. لكن فلتر الجوال في قائمة الإدارة يمر عبر `INNER_SQL`/derived table فيختار المخطط `SCAN users` ثم JOIN بالـPK ثم يطبّق `phone = ? OR phone LIKE ?` على الناتج (تحققت على مخطط 008) → O(N_users). الإصلاح: استعلام أولي على profiles لجمع user_ids ثم `u.id IN` (الكلفة O(المطابقين))، وإبقاء الـLIKE فقط للحالات غير الدقيقة.
+
+## 4) خطة الإصلاح المرتّبة
+
+1. **هجرة 009 فهارس فقط** (F1, F3, F11, F12) — SQL أعلاه؛ `CREATE INDEX IF NOT EXISTS` بلا أي تغيير بيانات؛ ثم `ANALYZE` مرة واحدة. **تحقق:** `EXPLAIN QUERY PLAN` لاستعلام users/list/overview/otp يجب أن يُظهر SEARCH+INDEX بدل SCAN/correlated range؛ وقيس زمن الصفحة قبل/بعد.
+2. **دورة صيانة في العامل** (`scripts/worker.ts`) — كل ساعة/يوم: `PRAGMA optimize`/ANALYZE عند تغير البيانات + `pruneRetention` (F4) + `wal_checkpoint(PASSIVE)` + `journal_size_limit` (F14). **تحقق:** حجم DB وعدد الصفوف قبل/بعد 30 يومًا محاكاة، و`PRAGMA integrity_check`.
+3. **تقليل الكتابات** (F5) — معاملة واحدة لـ`recordOperation`؛ إسقاط/توظيف bucket+histogram؛ معاملة واحدة لإحصاء المقارنة؛ قياس عدد التزامات WAL قبل/بعد. **تحقق:** اختبارات `tests/admin-operations.test.ts` القائمة + عدّاد WAL.
+4. **إصلاحات القراءة الساخنة** — F7 (attachment_ids)، F8 (runtimeEnv استعلام واحد + cache)، F9 (دمج overview + كاش)، F15 (دفعة مرفقات)، F16 (استخراج خلفي). **تحقق:** عدّاد استعلامات middleware/تسجيل مؤقت + زمن GET للحالة/اللوحة.
+5. **مطابقة عتبة الاستيلاء** (F6) — ربطها بـ`staleRunDeadlineMs`/heartbeat + اختبار تزامن لمقارنة أطول من 10 دقائق.
+6. **تحسينات الاستعلامات الكبيرة** — F2 (keyset + فلاتر على أعمدة حقيقية)، F10 (فلتر جوال من profiles)، F13 (صفحة IDs ثم تجميع) — هذه تحتاج اختبارات سلوك/ترقيم قبل الدمج.
+7. **تنظيف** — F17 (حذف 8 حزم + تنظيف next.config)، F18 (اختبار هجرة 008 على نسخة بحجم إنتاجي وحذف `profiles_unverified_idx` إن ثبت عدم استخدامه).
+8. **توصية معمارية مستمرة:** بسبب `DatabaseSync` المتزامن على اتصال واحد عام (runtime.ts:5-18)، ضع سقفاً على زمن أي استعلام إداري (صفحات/فلاتر) وقِس p95 لصفحات الإدارة بعد كل تغيير؛ إن تجاوزت عشرات الميلي ثانية فالحل هيكلي (تجميع مسبق/كاش/عامل قراءة) لا فهرس فقط.
+
+## 5) ما لم يُفحص / قيود
+
+- **لم أشغّل** `npm run build`/`typecheck`/`test` ولا أي أداة من `scripts/bench` (node_modules غير مكتمل وممنوع npm). لم أعدّل أي ملف خارج هذا التقرير.
+- **لا قاعدة بيانات حقيقية في المستودع** (`data/` غير موجود و`.next` غير مبني): كل القياسات على قاعدة SQLite 3.53.4 في الذاكرة ببيانات صناعية (Windows، جهاز تطوير)؛ الأرقام **نسبية دالة** وليست SLA إنتاجية. الأزمنة المطلقة ستختلف.
+- **أرقام الأسطر لقطة متحركة:** العمل على P0 جارٍ (008 + otp/phone + overview phoneUnverified) أثناء التدقيق؛ تحققت من كل سطر مذكور وقت الكتابة لكن أعد التحقق قبل التنفيذ.
+- **لم أفحص** أداء المتصفح/التحميل الأول، صفحات SSR خارج workspace polling، ولا شبكة المزوّدين (قياسات سابقة في `docs/audit/PERFORMANCE-*.md`؛ ملاحظة: تقرير 2026-10-28 القديم يعتبر jszip/mammoth/unpdf غير مستوردة وهي الآن مستوردة عبر dynamic import — لا تعتمد عليه كما هو).
+- **قياس batching/WAL** لم يُقَس زمنيًا (يتطلب ملف DB/WAL وحملًا حقيقيًا)؛ اعتمدت العدّ الساكن من الشيفرة.
+- **حدود المعدل/الذاكرة** فُحصت ساكنًا فقط (سقف 4096 bucket في guard.ts و2048 في turnstile-replay.ts) ولم تُختبر تحت حمل.
+- **لا P0 هنا**؛ تقاطع مع تقارير أخرى: ملكية OTP وphone_history تخص فرق الأمن/حالة الحساب، وdead tables (`operation_rollups`/`admin_operation_feed`/`presence_rollups`/`admin_account_directory`) تخص سرب الكود الميت — ذكرتها هنا فقط من زاوية أثر الكتابة/القراءة.

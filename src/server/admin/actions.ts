@@ -4,6 +4,7 @@ import type { AdminCommand } from "@/domain/admin/command";
 import { endUserSessions } from "@/server/account-access";
 import { immediateTransaction } from "@/server/db/transaction";
 import { userQuotaId } from "@/server/db/quota-ids";
+import { findVerifiedPhoneOwner, readProfilePhone, recordPhoneAudit } from "@/server/phone/audit";
 
 export function applyAdminAction(
   db: DatabaseSync,
@@ -24,6 +25,8 @@ function applyInside(
   if (command.type === "quota") return setQuota(db, actorId, command.userId, command.limit);
   if (command.type === "restore") return restore(db, actorId, command.userId, now);
   if (command.type === "role") return setRole(db, actorId, command.userId, command.role);
+  if (command.type === "phone") return setPhone(db, actorId, command.userId, command.phone, now);
+  if (command.type === "unverify") return unverifyPhone(db, actorId, command.userId, now);
   return suspend(db, actorId, command.userId, command.mode, now);
 }
 
@@ -107,6 +110,76 @@ function setQuota(
     db.prepare("UPDATE quota_accounts SET limit_units = ? WHERE id = ?").run(limit, id);
   }
   writeAudit(db, actorId, "quota", userId, { quotaLimit: limit });
+  return { commit: true, value: { ok: true, changed: true } };
+}
+
+/**
+ * Admin phone change: stores the new number UNVERIFIED and appends
+ * PHONE_CHANGED_BY_ADMIN. Clearing verification is deliberate: only the
+ * customer receiving the SMS can prove ownership of the new number.
+ */
+function setPhone(
+  db: DatabaseSync,
+  actorId: string,
+  userId: string,
+  phone: string,
+  now: Date,
+): { commit: boolean; value: { ok: true; changed: boolean } | { ok: false } } {
+  if (!readSnap(db, userId)) return { commit: false, value: { ok: false } };
+  const current = readProfilePhone(db, userId);
+  const oldPhone = current?.phoneE164 ?? null;
+  if (oldPhone === phone && !current?.phoneVerifiedAt) return { commit: true, value: { ok: true, changed: false } };
+  // A number verified by another account cannot be assigned by an admin either.
+  if (findVerifiedPhoneOwner(db, phone, userId)) return { commit: false, value: { ok: false } };
+  db.prepare(`
+    INSERT INTO profiles (user_id, phone_e164, phone_verified_at, updated_at)
+    VALUES (?, ?, NULL, ?)
+    ON CONFLICT(user_id) DO UPDATE SET
+      phone_e164 = excluded.phone_e164,
+      phone_verified_at = NULL,
+      updated_at = excluded.updated_at
+  `).run(userId, phone, now.toISOString());
+  recordPhoneAudit(db, {
+    userId,
+    oldPhone,
+    newPhone: phone,
+    action: "PHONE_CHANGED_BY_ADMIN",
+    phoneVerified: false,
+    actorType: "admin",
+    actorUserId: actorId,
+    metadata: { source: "admin_action" },
+    now,
+  });
+  writeAudit(db, actorId, "phone", userId, { oldPhone, newPhone: phone });
+  return { commit: true, value: { ok: true, changed: true } };
+}
+
+/** Clears verification for a stuck account without changing the number. */
+function unverifyPhone(
+  db: DatabaseSync,
+  actorId: string,
+  userId: string,
+  now: Date,
+): { commit: boolean; value: { ok: true; changed: boolean } | { ok: false } } {
+  if (!readSnap(db, userId)) return { commit: false, value: { ok: false } };
+  const current = readProfilePhone(db, userId);
+  if (!current?.phoneE164 || !current.phoneVerifiedAt) return { commit: true, value: { ok: true, changed: false } };
+  db.prepare("UPDATE profiles SET phone_verified_at = NULL, updated_at = ? WHERE user_id = ?").run(
+    now.toISOString(),
+    userId,
+  );
+  recordPhoneAudit(db, {
+    userId,
+    oldPhone: current.phoneE164,
+    newPhone: current.phoneE164,
+    action: "PHONE_CHANGED_BY_ADMIN",
+    phoneVerified: false,
+    actorType: "admin",
+    actorUserId: actorId,
+    metadata: { source: "admin_unverify" },
+    now,
+  });
+  writeAudit(db, actorId, "unverify", userId, { phone: current.phoneE164 });
   return { commit: true, value: { ok: true, changed: true } };
 }
 

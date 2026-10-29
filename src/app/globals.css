@@ -22,6 +22,8 @@ html[data-theme="light"] {
   --card: #FBF7F0;
   --on-accent: #FBF7F0;
   --line: color-mix(in srgb, #1C1915 22%, #E9E1D2);
+  /* Control boundaries need 3:1 (WCAG 1.4.11); --line stays subtle for dividers. */
+  --line-strong: color-mix(in srgb, #1C1915 50%, #E9E1D2);
   --ok: #2E6B46;
   --ok-soft: #DFEDE3;
   --warn: #8A5A12;
@@ -58,6 +60,7 @@ html[data-theme="dark"] {
   --card: #2A2521;
   --on-accent: #141210;
   --line: color-mix(in srgb, #F3EFE4 24%, #141210);
+  --line-strong: color-mix(in srgb, #F3EFE4 40%, #141210);
   --ok: #8FD3A8;
   --ok-soft: #1E3327;
   --warn: #E7C07A;
@@ -264,7 +267,7 @@ button, input, textarea, select {
 
 .field, .area, .upload {
   width: 100%;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-radius: 16px;
   background: var(--card);
   background-image: none;
@@ -366,6 +369,26 @@ button, input, textarea, select {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* WCAG 2.4.7: the skip link must become visible when it receives focus. */
+.sr-only:focus,
+.sr-only:focus-visible {
+  position: fixed;
+  inset-block-start: 0.75rem;
+  inset-inline-start: 0.75rem;
+  z-index: 100;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0.6rem 1rem;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.5rem;
+  background: var(--card);
+  color: var(--ink);
 }
 
 .hero { padding: 1.5rem 0 4rem; }
@@ -516,7 +539,10 @@ button, input, textarea, select {
   line-height: 1.35;
 }
 
+/* Horizontally scrollable tables must be focusable so keyboard users can pan
+   them on narrow screens (WCAG 2.1.1); the focus ring is drawn by :focus-visible. */
 .table-wrap { overflow-x: auto; }
+.table-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .admin-table {
   width: 100%;
@@ -1240,10 +1266,11 @@ button, input, textarea, select {
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    padding:
-      0.6rem
-      max(1rem, env(safe-area-inset-inline-start))
-      calc(0.6rem + env(safe-area-inset-bottom));
+    /* env() only defines physical safe-area names; the previous
+       env(safe-area-inset-inline-start) was invalid and dropped the whole
+       padding declaration. */
+    padding-block: 0.6rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    padding-inline: max(1rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-left, 0px));
     border-top: 1px solid var(--line);
     background: color-mix(in srgb, var(--paper) 94%, transparent);
     -webkit-backdrop-filter: blur(12px);
@@ -1287,3 +1314,69 @@ button, input, textarea, select {
   html { scroll-behavior: auto; }
   * { animation: none !important; transition: none !important; }
 }
+/* ---- Phone activation gate (P0) ----------------------------------------- */
+.verify-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-block: 1rem 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--warn) 55%, var(--line));
+  border-radius: 0.75rem;
+  background: var(--warn-soft);
+  color: var(--ink);
+}
+.verify-banner p { margin: 0; font-weight: 600; }
+.verify-banner .btn { flex: none; background: var(--ink); color: var(--paper); }
+
+.verify-page { display: grid; gap: 1rem; }
+.verify-panel { display: grid; gap: 0.75rem; }
+.verify-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.phone-badge {
+  display: inline-block;
+  padding: 0.1rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.phone-badge.is-verified { background: var(--ok-soft); color: var(--ok); }
+.phone-badge.is-pending { background: var(--warn-soft); color: var(--warn); }
+
+.phone-value {
+  margin: 0 0 0.25rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin: 0.5rem 0 0.75rem;
+}
+.account-grid dt { color: var(--muted); font-size: 0.85rem; }
+.account-grid dd { margin: 0.1rem 0 0; font-weight: 600; }
+
+.phone-history td,
+.phone-history th { font-size: 0.85rem; }
+.phone-history .ltr { white-space: nowrap; }
+
+.admin-phone-actions { display: grid; gap: 0.4rem; }
+.admin-phone-actions form { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; margin: 0; }
+.admin-phone-actions .field { width: 10.5rem; min-height: 40px; direction: ltr; text-align: left; }
+
+.admin-filter-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; margin-block: 0.5rem 1rem; }
+.admin-filter-bar .field { min-height: 42px; }
+.admin-filter-bar label { display: grid; gap: 0.2rem; font-size: 0.85rem; color: var(--muted); }
+
+.admin-counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.75rem; }
+.admin-counts .card { padding: 0.75rem 1rem; }
+.admin-counts strong { display: block; font-size: 1.4rem; }
+
+.event-actor { color: var(--muted); font-size: 0.85rem; }
+

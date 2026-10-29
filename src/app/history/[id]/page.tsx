@@ -6,6 +6,7 @@ import { formatHistoryDate } from "@/app/history/format";
 import { readComparisonForUser, type HistoryComparison } from "@/server/comparisons/history";
 import { getDatabase } from "@/server/db/runtime";
 import { readGoogleSession } from "@/server/google-session";
+import { redirectUnverifiedToVerifyPhone } from "@/server/phone/gate";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export default async function HistoryDetailPage({ params }: { params: HistoryDet
     );
   }
 
+  await redirectUnverifiedToVerifyPhone(`/history/${encodeURIComponent(id)}`);
   let comparison: HistoryComparison | null = null;
   let loadError = false;
   try {

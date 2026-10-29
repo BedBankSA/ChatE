@@ -132,6 +132,17 @@ function metricsOf(db: DatabaseSync, range: TimeRange): AdminMetric[] {
   const storage = storageTotals(db);
   return [
     paired("accounts", "الحسابات", countWhere(db, "SELECT COUNT(*) AS n FROM users", []), null, "كل الحسابات المسجلة"),
+    paired(
+      "phoneUnverified",
+      "جوالات غير موثقة",
+      countWhere(
+        db,
+        "SELECT COUNT(*) AS n FROM users u LEFT JOIN profiles p ON p.user_id = u.id WHERE p.phone_verified_at IS NULL",
+        [],
+      ),
+      null,
+      "عملاء لم يكملوا تفعيل الجوال (عالقون)",
+    ),
     paired("questions", "الأسئلة", questions, opCount(db, "question", range.previousFrom, range.previousTo), "عمليات السؤال في المدى"),
     paired("calls", "الاستدعاءات", calls, opCount(db, "generation", range.previousFrom, range.previousTo), "استدعاءات التوليد في المدى"),
     paired("failures", "الأخطاء", failures, failedCount(db, range.previousFrom, range.previousTo), `حد المعدل ${classes.rate}، مصادقة ${classes.auth}، خدمة ${classes.service}`),

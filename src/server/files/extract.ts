@@ -1,4 +1,5 @@
 import { decodeText, type DetectedKind } from "@/domain/files/content";
+import { inspectZipBytes, readZipLimits } from "@/server/files/zip-safety";
 
 /**
  * Extraction results are persisted once, at upload time, in documents/chunks
@@ -127,6 +128,17 @@ async function extractPdf(bytes: Uint8Array, maxChars: number): Promise<Extracti
 }
 
 async function extractDocx(bytes: Uint8Array, maxChars: number): Promise<ExtractionResult> {
+  // Refuse a decompression bomb before mammoth expands the archive.
+  const safety = await inspectZipBytes(bytes, readZipLimits());
+  if (!safety.ok) {
+    return {
+      status: "failed",
+      ...EMPTY,
+      parts: [{ label: "docx", status: "failed", reason: `zip_${safety.reason}` }],
+      failedParts: [{ label: "docx", reason: `zip_${safety.reason}` }],
+      errorCode: "ZIP_LIMIT",
+    };
+  }
   try {
     const mammoth = (await import("mammoth")).default;
     const parsed = await mammoth.extractRawText({ buffer: Buffer.from(bytes) });

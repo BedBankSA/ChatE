@@ -86,6 +86,11 @@ function UserSection({ data, csrf }: { data: AdminDashboardData; csrf: string })
         <button className="btn" type="submit">بحث</button>
       </form>
       {data.users.length ? <UserTable data={data} csrf={csrf} /> : <p>لا حسابات مطابقة لهذا المرشح.</p>}
+      <p className="meta">
+        <a className="btn secondary" href="/admin/phones?status=unverified">
+          العملاء غير الموثقين وسجل أرقام الجوال
+        </a>
+      </p>
       <Pager data={data} />
     </section>
   );
@@ -93,7 +98,7 @@ function UserSection({ data, csrf }: { data: AdminDashboardData; csrf: string })
 
 function UserTable({ data, csrf }: { data: AdminDashboardData; csrf: string }) {
   return (
-    <div className="table-wrap">
+    <div className="table-wrap" role="region" aria-label="جدول حسابات المستخدمين" tabIndex={0}>
       <table className="admin-table">
         <caption className="sr-only">حسابات المستخدمين بلا نص المحادثة</caption>
         <thead>
@@ -267,7 +272,7 @@ function HonestGaps({ data }: { data: AdminDashboardData }) {
 
 function SecretTable({ versions }: { versions: AdminSecretVersion[] }) {
   return (
-    <div className="table-wrap">
+    <div className="table-wrap" role="region" aria-label="جدول إصدارات الأسرار" tabIndex={0}>
       <table className="admin-table">
         <caption>آخر أربعة أحرف فقط</caption>
         <thead>

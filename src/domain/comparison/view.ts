@@ -29,6 +29,7 @@ const STATUS_TEXT: Record<string, string> = {
   queued: "في الانتظار",
   running: "يعمل الآن",
   completed: "اكتمل",
+  closed: "اكتمل",
   incomplete: "النتيجة ناقصة",
   failed: "تعذر",
   policy_blocked: "موقوف حسب شروط المزود",
@@ -67,4 +68,18 @@ export function successSummaryText(count: number): string {
   if (count === 1) return "تم استلام إجابة واحدة بنجاح.";
   if (count === 2) return "تم استلام إجابتين بنجاح.";
   return `تم استلام ${count} إجابات بنجاح.`;
+}
+/** A settled comparison whose runs all failed must read as a failure, not success. */
+export const ALL_MODELS_FAILED_MESSAGE =
+  "تعذر الحصول على إجابة ناجحة من كل النماذج المختارة. أعد المحاولة بعد قليل أو اختر نموذجًا آخر.";
+
+export function comparisonSettledNotice(
+  runs: readonly { status: string }[],
+): { kind: "success" | "error"; text: string } {
+  const completed = runs.filter((run) => run.status === "completed").length;
+  if (completed > 0) return { kind: "success", text: successSummaryText(completed) };
+  return {
+    kind: "error",
+    text: runs.length > 0 ? ALL_MODELS_FAILED_MESSAGE : "لم تصل إجابات ناجحة بعد.",
+  };
 }

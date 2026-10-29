@@ -47,13 +47,14 @@ export async function handleAdminUsers(request: Request, deps: AdminDeps): Promi
   if (!adminMutationAllowed({ origin: request.headers.get("origin"), host, csrf, sessionCsrf: session.csrf })) {
     return noStore(jsonError("الطلب مرفوض.", "origin", 403));
   }
+  const returnTo = form.get("returnTo");
   const parsed = parseAdminCommand(form);
-  if (!parsed.ok) return redirectNotice(request, "rejected");
+  if (!parsed.ok) return redirectNotice(request, "rejected", returnTo);
   try {
     const result = applyAdminAction(deps.db, decision.userId, parsed.command, deps.now ?? new Date());
-    return redirectNotice(request, result.ok && result.changed ? "saved" : "rejected");
+    return redirectNotice(request, result.ok && result.changed ? "saved" : "rejected", returnTo);
   } catch {
-    return redirectNotice(request, "rejected");
+    return redirectNotice(request, "rejected", returnTo);
   }
 }
 
@@ -64,8 +65,9 @@ function decide(deps: AdminDeps) {
   return adminDecision(deps.session, stored, deps.env);
 }
 
-function redirectNotice(request: Request, notice: "saved" | "rejected"): Response {
-  const location = new URL("/admin", request.url);
+/** Only two fixed destinations are allowed; a form value can never redirect off-site. */
+function redirectNotice(request: Request, notice: "saved" | "rejected", returnTo?: unknown): Response {
+  const location = new URL(returnTo === "phones" ? "/admin/phones" : "/admin", request.url);
   location.searchParams.set("notice", notice);
   return noStore(NextResponse.redirect(location, 303));
 }

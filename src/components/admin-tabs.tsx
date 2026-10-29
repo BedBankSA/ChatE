@@ -2,10 +2,11 @@ import Link from "next/link";
 
 const TABS = [
   { id: "dashboard", href: "/admin", label: "إدارة العملاء" },
+  { id: "phones", href: "/admin/phones", label: "سجل الجوالات" },
   { id: "settings", href: "/admin/settings", label: "المفاتيح والمزودات" },
 ] as const;
 
-export function AdminTabs({ active }: { active: "dashboard" | "settings" }) {
+export function AdminTabs({ active }: { active: "dashboard" | "phones" | "settings" }) {
   return (
     <nav className="admin-tabs" aria-label="أقسام الإدارة">
       {TABS.map((tab) => (

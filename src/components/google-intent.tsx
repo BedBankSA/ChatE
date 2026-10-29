@@ -122,7 +122,7 @@ export function GoogleIntentButton() {
           body: JSON.stringify({ credential, "cf-turnstile-response": turnstileToken }),
         });
         const body = (await response.json()) as {
-          data?: { name?: string };
+          data?: { name?: string; next?: string };
           error?: { message?: string };
         };
         if (!response.ok) {
@@ -130,7 +130,9 @@ export function GoogleIntentButton() {
           return;
         }
         setMessage(`تم الدخول: ${body.data?.name || "حساب Google"}`);
-        router.push("/workspace");
+        // The server decides the destination: unverified accounts go straight to
+        // /verify-phone instead of a workspace that would refuse every action.
+        router.push(body.data?.next || "/workspace");
         router.refresh();
       } catch {
         setMessage("تعذر إكمال الدخول");

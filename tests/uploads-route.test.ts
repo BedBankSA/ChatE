@@ -165,9 +165,12 @@ async function makePdf(text: string): Promise<Uint8Array> {
 
 function seedAccount(userId: string, googleSub: string): void {
   insertUser(database(), { id: userId, googleSub, email: `${googleSub}@example.com`, name: "مستخدم اختبار" });
+  // Migration 009 enforces one verified account per number, so each fixture
+  // account owns its own number (the previous shared value would now abort).
+  const phone = userId === USER_ID ? "+966501234567" : "+966505555555";
   database()
     .prepare("INSERT INTO profiles (user_id, phone_e164, phone_verified_at) VALUES (?, ?, ?)")
-    .run(userId, "+966501234567", new Date().toISOString());
+    .run(userId, phone, new Date().toISOString());
 }
 
 beforeEach(() => {

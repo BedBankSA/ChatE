@@ -1,5 +1,8 @@
+import { modelUseBlock, otpProviderConfigured } from "@/domain/auth/model-gate";
 import { publicError } from "@/domain/errors";
+import { readStoredProfile } from "@/server/db/profiles";
 import { getDatabase } from "@/server/db/runtime";
+import { runtimeEnv } from "@/server/db/settings";
 import { jsonError, jsonOk } from "@/server/http";
 import { gateTurnstile } from "@/server/guard";
 import { readComparisonSession } from "@/server/google-session";
@@ -77,6 +80,20 @@ async function readBoundedBody(request: Request, maxBytes: number): Promise<Boun
 export async function POST(request: Request): Promise<Response> {
   const session = await readComparisonSession(request);
   if (!session) return jsonError(ANONYMOUS_MESSAGE, "anonymous", 401);
+  // Phone verification gates the product exactly like comparisons do: the
+  // /verify-phone copy and the model gate promise uploads stay closed until the
+  // SMS code succeeds, so the upload route enforces it before reading any bytes.
+  let storedProfile;
+  let db;
+  try {
+    db = getDatabase();
+    storedProfile = readStoredProfile(db, session.userId);
+  } catch {
+    return jsonError(STORE_MESSAGE, "store", 500);
+  }
+  if (!storedProfile) return jsonError("أعد تسجيل الدخول قبل رفع الملفات.", "account_missing", 401);
+  const phoneBlocked = modelUseBlock(storedProfile, otpProviderConfigured(runtimeEnv()));
+  if (phoneBlocked) return jsonError(phoneBlocked.message, phoneBlocked.code, phoneBlocked.status);
 
   const declared = declaredLength(request);
   if (declared != null && declared > MAX_UPLOAD_BODY_BYTES) {
@@ -116,13 +133,6 @@ export async function POST(request: Request): Promise<Response> {
     declaredTotal += file.size;
   }
   if (declaredTotal > MAX_TOTAL_UPLOAD_BYTES) return jsonError(TOTAL_SIZE_MESSAGE, "file_size", 413);
-
-  let db;
-  try {
-    db = getDatabase();
-  } catch {
-    return jsonError(STORE_MESSAGE, "store", 500);
-  }
 
   const stored: StoredUpload[] = [];
   let actualTotal = 0;

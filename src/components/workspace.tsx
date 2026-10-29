@@ -2,7 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { issueTurnstileToken } from "@/components/turnstile";
-import { runStatusText, runsSettled, successSummaryText, successfulComparisonRuns, visibleComparisonRuns, type PublicRun } from "@/domain/comparison/view";
+import {
+  comparisonSettledNotice,
+  runStatusText,
+  runsSettled,
+  successSummaryText,
+  successfulComparisonRuns,
+  visibleComparisonRuns,
+  type PublicRun,
+} from "@/domain/comparison/view";
 import {
   MAX_COMPARISON_MODELS,
   MODEL_LIMIT_MESSAGE,
@@ -147,9 +155,6 @@ function providerLabel(run: PublicRun): string {
   return run.provider === "anthropic" ? "Anthropic" : "OpenRouter";
 }
 
-function settledSummary(runs: readonly PublicRun[]): string {
-  return successSummaryText(successfulComparisonRuns(runs).length);
-}
 
 function comparisonId(body: unknown): string | null {
   if (!body || typeof body !== "object") return null;
@@ -321,7 +326,8 @@ export function Workspace() {
         setRuns(next);
         if (runsSettled(next)) {
           setPollId(null);
-          setNotice({ kind: "success", text: settledSummary(next) });
+          // Zero completed answers is a failure, not a success with an empty body.
+          setNotice(comparisonSettledNotice(next));
         }
       } catch (error) {
         if (cancelled) return;
@@ -489,14 +495,18 @@ export function Workspace() {
       setAskedModels([...modelIds]);
       setAskedAttachments(attachments);
       const settled = runsSettled(next);
-      setNotice({
-        kind: "success",
-        text: settled
-          ? settledSummary(next)
-          : next.length > 0
-            ? `تم إرسال السؤال إلى ${next.length} نماذج. تصل الإجابات تباعًا.`
-            : "أُرسلت المقارنة.",
-      });
+      const settledNotice = comparisonSettledNotice(next);
+      setNotice(
+        settled
+          ? settledNotice
+          : {
+              kind: "success",
+              text:
+                next.length > 0
+                  ? `تم إرسال السؤال إلى ${next.length} نماذج. تصل الإجابات تباعًا.`
+                  : "أُرسلت المقارنة.",
+            },
+      );
       setPollId(id && !settled ? id : null);
       window.setTimeout(scrollToResults, 60);
     } catch (error) {

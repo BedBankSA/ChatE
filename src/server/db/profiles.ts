@@ -21,15 +21,23 @@ export function upsertGoogleUser(
   db.prepare("INSERT INTO profiles (user_id) VALUES (?) ON CONFLICT(user_id) DO NOTHING").run(id);
 }
 
-export function readStoredProfile(db: DatabaseSync, userId: string): Profile | null {
+export function readStoredProfile(db: DatabaseSync, userId: string, now: Date = new Date()): Profile | null {
+  // A temporary suspension must expire in the *read model* too, not only in the
+  // session check: otherwise the model gate keeps answering "suspended" forever
+  // while the admin screen already reports the account as active.
+  const nowIso = now.toISOString();
   const row = db.prepare(`
-    SELECT u.name AS name, u.email AS email, u.status AS status,
+    SELECT u.name AS name, u.email AS email,
+           CASE
+             WHEN u.status = 'suspended' AND u.suspended_until IS NOT NULL AND u.suspended_until <= ? THEN 'active'
+             ELSE u.status
+           END AS status,
            p.phone_e164 AS phone_e164, p.phone_verified_at AS phone_verified_at,
            p.age AS age, p.city AS city
     FROM users u
     LEFT JOIN profiles p ON p.user_id = u.id
     WHERE u.id = ?
-  `).get(userId) as Record<string, SQLOutputValue> | undefined;
+  `).get(nowIso, userId) as Record<string, SQLOutputValue> | undefined;
   if (!row) return null;
   return {
     name: typeof row.name === "string" ? row.name : null,

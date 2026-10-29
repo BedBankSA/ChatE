@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -8,7 +8,6 @@ import { describe, expect, it } from "vitest";
 import { isSuspended, sessionEnded } from "@/domain/admin/access";
 import { adminDecision, adminMutationAllowed } from "@/domain/admin/gate";
 import { parseAdminCommand } from "@/domain/admin/command";
-import { AdminDenied } from "@/components/admin-denied";
 import { AdminDashboard } from "@/components/admin-dashboard";
 import type { AdminDashboardData } from "@/domain/admin/dashboard";
 import { migrateDatabase, openDatabase } from "@/server/db/index";
@@ -296,11 +295,12 @@ describe("admin http", () => {
 
 describe("admin page surface", () => {
   it("shows no admin controls until the dashboard is rendered", () => {
-    const denied = renderToStaticMarkup(createElement(AdminDenied));
-    expect(denied).toContain("غير المشرف");
-    expect(denied).not.toMatch(/<button/i);
-    expect(denied).not.toMatch(/<form/i);
-    expect(denied).not.toMatch(/<input/i);
+    // The denial surface is now a server-side redirect, so no component can
+    // render admin chrome for a non-admin. Assert the page contract directly.
+    const pageSource = readFileSync(path.join(process.cwd(), "src/app/admin/page.tsx"), "utf8");
+    expect(pageSource).toContain("currentAdmin");
+    expect(pageSource).toContain('redirect("/?forbidden=admin")');
+    expect(pageSource).not.toMatch(/<form/i);
 
     const data: AdminDashboardData = {
       email: ownerEmail,

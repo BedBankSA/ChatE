@@ -6,6 +6,20 @@ export const OTP_MAX_ATTEMPTS = 5;
 export const OTP_MAX_SENDS = 3;
 export const OTP_WINDOW_MS = 15 * 60 * 1000;
 
+/**
+ * Browser resend countdown. The server enforces the real 3-per-15-minutes cap
+ * from SQLite; this is the recommended wait before offering the button again, so
+ * a customer is not told "wait" with no number attached.
+ */
+export const OTP_RESEND_COOLDOWN_SECONDS = 60;
+
+/**
+ * Per-target-phone ceiling inside the window, across accounts. The per-user cap
+ * alone would still let many accounts steer SMS at one victim number; this caps
+ * that abuse and the carrier bill.
+ */
+export const OTP_MAX_SENDS_PER_PHONE = 5;
+
 export type OtpChallenge = {
   codeHash: string;
   expiresAt: number;
