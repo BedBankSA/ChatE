@@ -1,0 +1,72 @@
+# ChatE — single-host Docker Compose profile (web + worker + SQLite volume).
+# Alternative to the native systemd profile in docs/launch/DEPLOYMENT-RUNBOOK.md.
+# Usage:
+#   cp deploy/.env.production.example deploy/.env.production   # fill secrets, chmod 600
+#   docker compose --env-file deploy/.env.production -f deploy/docker-compose.yml up -d --build
+#
+# TLS is terminated by Caddy/nginx on the host (see deploy/Caddyfile), so the web
+# port is bound to loopback only. Do not publish 3211 on 0.0.0.0.
+name: chate
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        # Public values, inlined into the client bundle at build time.
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-0x4AAAAAAFoJLWRjfC1ZYlwB}
+    image: chate:latest
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      PORT: "3211"
+      SQLITE_PATH: /data/chate.sqlite
+      STORAGE_DIR: /data/storage
+    ports:
+      - "127.0.0.1:3211:3211"
+    volumes:
+      - chate-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3211/api/models').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  worker:
+    image: chate:latest
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    depends_on:
+      web:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      SQLITE_PATH: /data/chate.sqlite
+      STORAGE_DIR: /data/storage
+    command: ["node", "node_modules/tsx/dist/cli.mjs", "scripts/worker.ts"]
+    volumes:
+      - chate-data:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  chate-data:
+    name: chate-data

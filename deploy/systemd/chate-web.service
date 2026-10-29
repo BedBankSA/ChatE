@@ -1,0 +1,47 @@
+# ChatE web process — /etc/systemd/system/chate-web.service
+# Install:
+#   sudo install -m 0644 deploy/systemd/chate-web.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now chate-web
+# Layout assumed: /opt/chate (app), /var/lib/chate (data), /etc/chate/chate.env (secrets).
+[Unit]
+Description=ChatE web (Next.js 16, Node 24)
+Documentation=file:/opt/chate/docs/launch/DEPLOYMENT-RUNBOOK.md
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=10
+
+[Service]
+Type=simple
+User=chate
+Group=chate
+WorkingDirectory=/opt/chate
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+Environment=PORT=3211
+EnvironmentFile=/etc/chate/chate.env
+# Bind loopback only: Caddy/nginx is the sole public ingress.
+ExecStart=/usr/bin/node /opt/chate/node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3211
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGTERM
+UMask=0077
+LimitNOFILE=65535
+
+# Hardening: the app only needs /var/lib/chate (SQLite + storage) and .next/cache.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/chate /opt/chate/.next
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryMax=768M
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=chate-web
+
+[Install]
+WantedBy=multi-user.target

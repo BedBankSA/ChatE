@@ -1,0 +1,2107 @@
+{
+  "generatedAt": "2026-10-28T15:57:17.657Z",
+  "phase": "prod-mock",
+  "baseUrl": "http://chate.test:3212",
+  "mock": true,
+  "turnstileStub": true,
+  "googleStub": false,
+  "chrome": null,
+  "node": "v24.22.1",
+  "counts": {
+    "PASS": 43,
+    "FAIL": 0,
+    "BLOCKED": 2,
+    "SKIP": 2
+  },
+  "total": 47,
+  "results": [
+    {
+      "id": "S01",
+      "area": "server reachability",
+      "status": "PASS",
+      "steps": "GET http://chate.test:3212/",
+      "expected": "HTTP 200 Arabic HTML",
+      "actual": "HTTP 200, 8436 bytes",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": null
+    },
+    {
+      "id": "S02",
+      "area": "security headers on HTML",
+      "status": "PASS",
+      "steps": "GET / and inspect response headers",
+      "expected": "CSP with frame-ancestors none + nosniff + DENY + referrer + permissions",
+      "actual": "all present; CSP=453 chars",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 0
+    },
+    {
+      "id": "S03",
+      "area": "RTL shell attributes",
+      "status": "PASS",
+      "steps": "inspect served HTML shell",
+      "expected": "html lang=\"ar\" dir=\"rtl\" + Arabic skip link",
+      "actual": "attributes present",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 0
+    },
+    {
+      "id": "S04",
+      "area": "public pages render (200, Arabic h1)",
+      "status": "PASS",
+      "steps": "GET each public route; anonymous and authenticated /profile/complete",
+      "expected": "public routes 200, anonymous profile 307 to /, authenticated profile 200",
+      "actual": "/ 200; /privacy 200; /terms 200; /account 200; /history 200; /admin 200; /profile/complete 307 anonymous -> /; /profile/complete 200 authenticated",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 106
+    },
+    {
+      "id": "S05",
+      "area": "404 page status and localization",
+      "status": "PASS",
+      "steps": "GET /qa-does-not-exist-<ts>",
+      "expected": "404 + Arabic localized body",
+      "actual": "404, Arabic body",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 16
+    },
+    {
+      "id": "S06",
+      "area": "unauthenticated /workspace redirect",
+      "status": "PASS",
+      "steps": "GET /workspace without cookie",
+      "expected": "307 Location /",
+      "actual": "307 Location /",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 12
+    },
+    {
+      "id": "S07",
+      "area": "GET /api/models contract",
+      "status": "PASS",
+      "steps": "GET /api/models",
+      "expected": "200, ok envelope, model array with required fields",
+      "actual": "23 models, keys ok",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 7
+    },
+    {
+      "id": "S08",
+      "area": "POST /api/comparisons unauthenticated = 401",
+      "status": "PASS",
+      "steps": "POST /api/comparisons without cookie",
+      "expected": "401 anonymous Arabic",
+      "actual": "401 anonymous",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 48
+    },
+    {
+      "id": "S09",
+      "area": "GET comparison unauthenticated and unknown id",
+      "status": "PASS",
+      "steps": "GET /api/comparisons/<random uuid> anonymous and seeded user",
+      "expected": "401 anonymous; 404 not_found authenticated",
+      "actual": "401/404/404 as expected",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 19
+    },
+    {
+      "id": "S10",
+      "area": "admin API authorization",
+      "status": "PASS",
+      "steps": "GET /api/admin/overview as anonymous / non-admin / admin; POST /api/admin/users anonymous",
+      "expected": "401 / 403 / 200 / 401",
+      "actual": "401, 403, 200, 401",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 34
+    },
+    {
+      "id": "S11",
+      "area": "unverified phone gate on comparison",
+      "status": "PASS",
+      "steps": "POST /api/comparisons as seeded phone-unverified user",
+      "expected": "403/503 with Arabic phone-verification gate",
+      "actual": "403 profile_incomplete — استخدام النماذج ينتظر توثيق الجوال. أكمل التحقق قبل الإرسال.",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 4
+    },
+    {
+      "id": "S12",
+      "area": "comparison input validation (authenticated, pre-Turnstile)",
+      "status": "PASS",
+      "steps": "POST invalid question bodies as seeded verified user, then valid body without Turnstile token",
+      "expected": "422/422/400/400 then 403 Turnstile rejection (no provider call)",
+      "actual": "422, 422, 400, 400, 403 — rejected before any model dispatch",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 21
+    },
+    {
+      "id": "S13",
+      "area": "theme endpoint cookie contract",
+      "status": "PASS",
+      "steps": "POST /api/theme with Referer /privacy",
+      "expected": "303 to /privacy + chate_theme=dark (not httpOnly)",
+      "actual": "303 /privacy",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 7
+    },
+    {
+      "id": "S14",
+      "area": "Google intent nonce endpoint",
+      "status": "PASS",
+      "steps": "POST /api/auth/google/intent",
+      "expected": "200 nonce + httpOnly nonce cookie",
+      "actual": "200 nonce issued",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 9
+    },
+    {
+      "id": "S15",
+      "area": "no server secret values in served HTML/JS",
+      "status": "PASS",
+      "steps": "scan served HTML and every referenced /_next/static JS for secret names, exact secret values, and key-shaped tokens",
+      "expected": "zero findings",
+      "actual": "15 assets scanned, 0 findings",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 141
+    },
+    {
+      "id": "S16",
+      "area": "admin mutation rejects wrong origin / CSRF, accepts valid form",
+      "status": "PASS",
+      "steps": "POST /api/admin/users: wrong origin, missing csrf, valid csrf+origin with invalid command",
+      "expected": "403, 403, 303 notice=rejected",
+      "actual": "403, 403, 303",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 14
+    },
+    {
+      "id": "S17",
+      "area": "uploads route stub behavior",
+      "status": "PASS",
+      "steps": "POST /api/uploads with mocked Turnstile token and no session",
+      "expected": "401 Arabic anonymous (no bytes stored by design)",
+      "actual": "401 anonymous",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 7
+    },
+    {
+      "id": "S18",
+      "area": "OTP API contract (send / wrong / verify / reuse)",
+      "status": "SKIP",
+      "steps": "POST /api/otp/send with a mocked Turnstile token",
+      "expected": "200 with the mock OTP provider",
+      "actual": "503 OTP_FAIL_CLOSED مزود الرسائل غير مهيأ — a production next-start refuses the legacy loopback HTTP OTP stub by design (NODE_ENV=production); the same contract is covered by unit tests and the dev-server run, and real deployments use SMS_PROVIDER=4jawaly.",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 14
+    },
+    {
+      "id": "S19",
+      "area": "session cookie forgery / expiry / ghost user rejected",
+      "status": "PASS",
+      "steps": "tampered HMAC, expired exp, valid HMAC for non-existent user",
+      "expected": "all 401",
+      "actual": "forged 401, expired 401, ghost 401",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 16
+    },
+    {
+      "id": "B01",
+      "area": "home renders (desktop 1440x900)",
+      "status": "PASS",
+      "steps": "navigate /, wait for h1, screenshot",
+      "expected": "Arabic RTL hero, skip link, landmarks, no console errors, one h1",
+      "actual": "one h1, landmarks ok, overflowX=0, CTA={\"googleHost\":true,\"googleChildren\":0,\"links\":[\"الخصوصية\"]}",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-home-desktop-light.png"
+      ],
+      "error": null,
+      "durationMs": 1061
+    },
+    {
+      "id": "B02",
+      "area": "home sign-in CTA present",
+      "status": "BLOCKED",
+      "steps": "inspect #google-signin-button after load",
+      "expected": "official Google button (iframe/button) or a visible error message",
+      "actual": "button host empty; status messages: []. External Google Identity Services did not mount in this environment; also confirms client hydration state.",
+      "evidence": "no GSI script request; see hydration test H01",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 4
+    },
+    {
+      "id": "B03",
+      "area": "theme toggle persists (cookie + server render)",
+      "status": "PASS",
+      "steps": "GET / (light) -> submit theme form -> inspect data-theme + cookie -> reload -> toggle back",
+      "expected": "light -> dark + cookie persisted -> reload still dark -> back to light",
+      "actual": "persisted dark across reload; dark screenshot captured",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-home-desktop-dark.png"
+      ],
+      "error": null,
+      "durationMs": 1543
+    },
+    {
+      "id": "B04",
+      "area": "navigation + back/forward",
+      "status": "PASS",
+      "steps": "home -> nav privacy -> nav history -> history.back() -> history.forward()",
+      "expected": "client-side nav plus browser history restore each page",
+      "actual": "back -> /privacy, forward -> /history",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-privacy-desktop.png",
+        "docs/audit/screenshots/_final-history-desktop.png"
+      ],
+      "error": null,
+      "durationMs": 974
+    },
+    {
+      "id": "B05",
+      "area": "terms page renders and is linked",
+      "status": "PASS",
+      "steps": "GET /terms directly; collect same-page links to /terms",
+      "expected": "200 Arabic terms content; footer/nav link for discoverability",
+      "actual": "content renders; inbound links on page: [\"/terms\"]",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-terms-desktop.png"
+      ],
+      "error": null,
+      "durationMs": 386
+    },
+    {
+      "id": "B06",
+      "area": "account / history unauthenticated rendering",
+      "status": "PASS",
+      "steps": "GET /account and /history without session",
+      "expected": "Arabic informational pages with sign-in affordance",
+      "actual": "account CTA host present=true; history CTA host present=true",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-account-desktop.png",
+        "docs/audit/screenshots/_final-history-desktop.png"
+      ],
+      "error": null,
+      "durationMs": 711
+    },
+    {
+      "id": "B07",
+      "area": "admin denied page (unauthenticated)",
+      "status": "PASS",
+      "steps": "GET /admin without session",
+      "expected": "200 page explaining server-side admin denial, no dashboard data",
+      "actual": "denial copy rendered, no metrics in DOM",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-admin-denied-desktop.png"
+      ],
+      "error": null,
+      "durationMs": 308
+    },
+    {
+      "id": "B08",
+      "area": "404 page screenshot",
+      "status": "PASS",
+      "steps": "navigate to /qa-missing-<ts>",
+      "expected": "Arabic localized 404 page",
+      "actual": "Arabic 404",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-not-found-desktop.png"
+      ],
+      "error": null,
+      "durationMs": 706
+    },
+    {
+      "id": "B09",
+      "area": "unauthenticated /workspace redirect (browser)",
+      "status": "PASS",
+      "steps": "GET /workspace with no session cookie",
+      "expected": "browser lands on / with home hero",
+      "actual": "final path /; document responses [{\"url\":\"http://chate.test:3212/workspace\",\"method\":\"GET\",\"status\":null,\"location\":null}]",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-workspace-unauth-redirect.png"
+      ],
+      "error": null,
+      "durationMs": 357
+    },
+    {
+      "id": "W01",
+      "area": "authenticated /workspace renders (shortcuts + question form)",
+      "status": "PASS",
+      "steps": "sign in via seeded cookie, GET /workspace",
+      "expected": "question composer + 4 shortcuts + answer-model picker",
+      "actual": "6 model rows, 6 checkboxes",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-workspace-auth-desktop-light.png"
+      ],
+      "error": null,
+      "durationMs": 1970
+    },
+    {
+      "id": "W02",
+      "area": "client hydration sanity (event handlers fire)",
+      "status": "PASS",
+      "steps": "click محادثة shortcut and compare aria-pressed",
+      "expected": "aria-pressed flips",
+      "actual": "flipped ([{\"text\":\"محادثة\",\"pressed\":\"true\"},{\"text\":\"برمجة\",\"pressed\":\"false\"},{\"text\":\"خفيف\",\"pressed\":\"false\"},{\"text\":\"مقارنة\",\"pressed\":\"false\"},{\"text\":\"الكل\",\"pressed\":\"true\"},{\"text\":\"محادثة\",\"pressed\":\"false\"},{\"text\":\"برمجة\",\"pressed\":\"false\"},{\"text\":\"إجابة\",\"pressed\":\"false\"}])",
+      "evidence": "{\"reactFiber\":5,\"nextF\":\"object\",\"renderers\":null}",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 2168
+    },
+    {
+      "id": "W03",
+      "area": "empty-question validation",
+      "status": "PASS",
+      "steps": "clear textarea, click إرسال",
+      "expected": "Arabic inline message, no network request",
+      "actual": "status: اكتب السؤال في الحقل أولًا. | ; comparison requests: 0",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 932
+    },
+    {
+      "id": "W04",
+      "area": "submit with unverified phone shows Arabic gate",
+      "status": "PASS",
+      "steps": "sign in as phone-unverified seeded user, type Arabic question, click إرسال",
+      "expected": "Arabic phone-verification gate message; no model call",
+      "actual": "status: استخدام النماذج ينتظر توثيق الجوال. أكمل التحقق قبل الإرسال. | ; 1 POST(s); 159ms to message",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-workspace-phone-gate.png"
+      ],
+      "error": null,
+      "durationMs": 1515
+    },
+    {
+      "id": "W05",
+      "area": "long Arabic question stays inside layout",
+      "status": "PASS",
+      "steps": "fill textarea with ~2900 chars of Arabic, measure layout overflow",
+      "expected": "no page-level horizontal overflow; textarea scrolls internally",
+      "actual": "length=2880, overflowX=0, textarea internal scroll=true, maxLength=8000 (server cap 8000)",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 914
+    },
+    {
+      "id": "W06",
+      "area": "HTML/script payload in question is treated as text",
+      "status": "PASS",
+      "steps": "type HTML/script payload as question, submit as unverified user",
+      "expected": "payload stays literal text, never executed",
+      "actual": "window.__qaXss=null, injected nodes=0, literal textarea value kept=true",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 1084
+    },
+    {
+      "id": "W07",
+      "area": "rapid double submit sends at most one request",
+      "status": "PASS",
+      "steps": "click إرسال three times within one tick",
+      "expected": "at most one POST /api/comparisons (sending ref guard)",
+      "actual": "1 POST(s); status: استخدام النماذج ينتظر توثيق الجوال. أكمل التحقق قبل الإرسال. | ",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 2463
+    },
+    {
+      "id": "W08",
+      "area": "back/forward after authenticated workspace navigation",
+      "status": "PASS",
+      "steps": "workspace -> nav privacy -> back -> forward",
+      "expected": "workspace and privacy restore correctly",
+      "actual": "back -> /workspace, forward -> /privacy",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 313
+    },
+    {
+      "id": "A01",
+      "area": "keyboard focus order and focus-visible styles",
+      "status": "PASS",
+      "steps": "press Tab up to 10 times from document body, record activeElement + computed outline",
+      "expected": "skip link first, nav/links reachable, every stop has a visible focus indicator",
+      "actual": "a:تخطى إلى المحتوى -> a:ChatE -> button:داكن -> a:السجل -> a:الخصوصية -> a:الشروط -> div:المواصلة باستخدام Google -> a:الخصوصية -> a:تخطى إلى المحتوى",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 1805
+    },
+    {
+      "id": "A02",
+      "area": "DOM accessibility audit (public pages)",
+      "status": "PASS",
+      "steps": "DOM audit for h1, names, alt text, ids, heading order, landmarks, contrast, RTL direction on 7 routes",
+      "expected": "no issues",
+      "actual": "all routes clean",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 935
+    },
+    {
+      "id": "A03",
+      "area": "RTL and mixed-direction rendering",
+      "status": "PASS",
+      "steps": "inspect html direction, nav item x-order (RTL), .ltr element computed direction",
+      "expected": "dir=rtl, nav flows right-to-left, model ids LTR",
+      "actual": "dir=rtl; nav x positions [392,310,250]; ltr elements 0 (all ltr=0)",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 1480
+    },
+    {
+      "id": "R01-mobile",
+      "area": "home responsive 390x844",
+      "status": "PASS",
+      "steps": "viewport 390x844, GET /, measure overflow and header overlap",
+      "expected": "no horizontal overflow, header rows do not overlap",
+      "actual": "overflowX=0, tiny targets=1, screenshot captured",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-home-mobile-390x844.png"
+      ],
+      "error": null,
+      "durationMs": 876
+    },
+    {
+      "id": "R01-tablet",
+      "area": "home responsive 768x1024",
+      "status": "PASS",
+      "steps": "viewport 768x1024, GET /, measure overflow and header overlap",
+      "expected": "no horizontal overflow, header rows do not overlap",
+      "actual": "overflowX=0, tiny targets=1, screenshot captured",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-home-tablet-768x1024.png"
+      ],
+      "error": null,
+      "durationMs": 844
+    },
+    {
+      "id": "R02-mobile-workspace",
+      "area": "authenticated workspace responsive 390x844",
+      "status": "PASS",
+      "steps": "390x844, authenticated /workspace",
+      "expected": "no horizontal overflow; form usable",
+      "actual": "overflowX=0",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-workspace-auth-mobile-390x844.png"
+      ],
+      "error": null,
+      "durationMs": 1176
+    },
+    {
+      "id": "R03-dark",
+      "area": "dark theme pages (home + workspace)",
+      "status": "PASS",
+      "steps": "set chate_theme=dark cookie, render home and workspace",
+      "expected": "dark theme applied server-side with readable contrast",
+      "actual": "dark attr present; workspace contrast {\"h1\":{\"ratio\":16.27,\"fg\":\"rgb(243, 239, 228)\",\"bg\":\"rgb(20,18,16)\"},\"p\":{\"ratio\":16.27,\"fg\":\"rgb(243, 239, 228)\",\"bg\":\"rgb(20,18,16)\"},\"nav-link\":{\"ratio\":16.27,\"fg\":\"rgb(243, 239, 228)\",\"bg\":\"rgb(20,18,16)\"},\"button\":{\"ratio\":16.27,\"fg\":\"rgb(243, 239, 228)\",\"bg\":\"rgb(20,18,16)\"},\"label\":{\"ratio\":13.2,\"fg\":\"rgb(243, 239, 228)\",\"bg\":\"rgb(42,37,33)\"}}",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-home-desktop-dark.png",
+        "docs/audit/screenshots/_final-workspace-auth-desktop-dark.png"
+      ],
+      "error": null,
+      "durationMs": 1972
+    },
+    {
+      "id": "P01",
+      "area": "perceived performance (dev/prod mocked server)",
+      "status": "PASS",
+      "steps": "GET /, read Navigation Timing, paint entries, LCP/CLS observers, resource transfer",
+      "expected": "documented baseline on this server mode (not a production SLA)",
+      "actual": "TTFB=10ms, FCP=116ms, load=95ms, LCP=116ms, CLS=0.002, resources=22 (5 KB)",
+      "evidence": "phase=prod-mock (server mode affects the numbers; dev server is not production)",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 1362
+    },
+    {
+      "id": "M01",
+      "area": "full comparison journey (mocked providers, Haiku live-enabled mock)",
+      "status": "PASS",
+      "steps": "default 4-model comparison, submit, wait for all cards to settle",
+      "expected": "one POST; 3 OpenRouter cards complete; Haiku live-enabled card completes through the mock; polling GETs",
+      "actual": "6 available models (4 preselected); 4 cards in 5ms; OpenRouter answered=3; Haiku status=\"اكتمل\" textLength=45; poll GETs=1",
+      "evidence": "",
+      "screenshots": [
+        "docs/audit/screenshots/_final-workspace-results.png"
+      ],
+      "error": null,
+      "durationMs": 697
+    },
+    {
+      "id": "M03",
+      "area": "profile OTP verification journey (mock SMS)",
+      "status": "BLOCKED",
+      "steps": "unverified user -> /profile/complete -> phone -> send",
+      "expected": "OTP code step with the mock gateway",
+      "actual": "production next-start refuses the legacy loopback HTTP OTP stub by design: مزود الرسائل غير مهيأ",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 331
+    },
+    {
+      "id": "M02",
+      "area": "stop/pause control messaging",
+      "status": "SKIP",
+      "steps": "open /workspace after a comparison, look for the stop control",
+      "expected": "stop control visible while results are shown",
+      "actual": "no comparison result view on this page",
+      "evidence": "",
+      "screenshots": [],
+      "error": null,
+      "durationMs": 138
+    }
+  ],
+  "console": {
+    "errors": [
+      {
+        "kind": "log",
+        "level": "error",
+        "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "url": "http://chate.test:3212/qa-missing-1793203012990",
+        "source": "network",
+        "external": false,
+        "dedupeKey": "log|error|http://chate.test:3212/qa-missing-1793203012990|Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "test": "B08"
+      },
+      {
+        "kind": "log",
+        "level": "error",
+        "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "url": "http://chate.test:3212/api/comparisons",
+        "source": "network",
+        "external": false,
+        "dedupeKey": "log|error|http://chate.test:3212/api/comparisons|Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "test": "W04"
+      },
+      {
+        "kind": "network",
+        "level": "error",
+        "text": "HTTP 503 Fetch",
+        "url": "http://chate.test:3212/api/otp/send",
+        "status": 503,
+        "external": false,
+        "noise": false,
+        "dedupeKey": "network|error|http://chate.test:3212/api/otp/send|HTTP 503 Fetch",
+        "test": "M03"
+      },
+      {
+        "kind": "log",
+        "level": "error",
+        "text": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+        "url": "http://chate.test:3212/api/otp/send",
+        "source": "network",
+        "external": false,
+        "dedupeKey": "log|error|http://chate.test:3212/api/otp/send|Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+        "test": "M03"
+      }
+    ],
+    "warnings": [],
+    "external": [
+      {
+        "kind": "log",
+        "level": "error",
+        "text": "Loading the stylesheet 'https://accounts.google.com/gsi/style' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked.",
+        "url": "https://accounts.google.com/gsi/client",
+        "line": 292,
+        "source": "security",
+        "external": true,
+        "dedupeKey": "log|error|https://accounts.google.com/gsi/client|Loading the stylesheet 'https://accounts.google.com/gsi/style' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked.",
+        "test": "B03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: ",
+        "url": "https://accounts.google.com/gsi/style",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/style|failed: ",
+        "test": "B03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_9458_358251&cas=ZffforTbNVk5kGFsfmJIk5%2FzH2mxLww5Pz1fHC6sCX8&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_9458_358251&cas=ZffforTbNVk5kGFsfmJIk5%2FzH2mxLww5Pz1fHC6sCX8&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "B03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_9816_75623&cas=k%2F8OQLZiESTC9V2dLHduqDZZsAORoZWU7w6z356jFl0&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_9816_75623&cas=k%2F8OQLZiESTC9V2dLHduqDZZsAORoZWU7w6z356jFl0&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "B03"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_10117_906281&cas=5asd7sj7EEREGN1G1P0V5Npk5HLx1kKPQuMCzQn%2BMBI&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_10117_906281&cas=5asd7sj7EEREGN1G1P0V5Npk5HLx1kKPQuMCzQn%2BMBI&hl=ar|HTTP 403 Document",
+        "test": "B03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_10689_897281&cas=kQA0UZpwgLR46RKWs%2FYo2hWpCB9ppv9u0YMAa6jhbEs&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_10689_897281&cas=kQA0UZpwgLR46RKWs%2FYo2hWpCB9ppv9u0YMAa6jhbEs&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "B04"
+      },
+      {
+        "kind": "console",
+        "type": "warning",
+        "level": "warn",
+        "text": "[GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used.",
+        "url": "https://accounts.google.com/gsi/client",
+        "line": 86,
+        "external": true,
+        "dedupeKey": "console|warn|https://accounts.google.com/gsi/client|[GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used.",
+        "test": "B04"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_11160_688463&cas=xChQxx8eKE1CmGG5X5cWI%2B2bwiJlJyKBUlDDqlnr0xE&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_11160_688463&cas=xChQxx8eKE1CmGG5X5cWI%2B2bwiJlJyKBUlDDqlnr0xE&hl=ar|HTTP 403 Document",
+        "test": "B04"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_11570_359034&cas=RWb%2FO%2FBl9PzCyKs6iwky%2B0GhTQ4T86Juy%2BxZe7GJa4A&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_11570_359034&cas=RWb%2FO%2FBl9PzCyKs6iwky%2B0GhTQ4T86Juy%2BxZe7GJa4A&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "B05"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_12095_35842&cas=RFtnSmQRQi8NdYuB1QgvgA%2Bu1zRfhGR7rxqMzpDaAQo&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_12095_35842&cas=RFtnSmQRQi8NdYuB1QgvgA%2Bu1zRfhGR7rxqMzpDaAQo&hl=ar|HTTP 403 Document",
+        "test": "B06"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_12446_586378&cas=q%2B3Bt4Dg6Szlf3Wl%2BnfDEC98%2FlZjHBfrz%2F2FWnv5URM&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_12446_586378&cas=q%2B3Bt4Dg6Szlf3Wl%2BnfDEC98%2FlZjHBfrz%2F2FWnv5URM&hl=ar|HTTP 403 Document",
+        "test": "B06"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_13830_661004&cas=GAAcE%2BrfRSBe2JkKXFKcvvvhsbY27oEbVPIdFo4DTk0&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_13830_661004&cas=GAAcE%2BrfRSBe2JkKXFKcvvvhsbY27oEbVPIdFo4DTk0&hl=ar|HTTP 403 Document",
+        "test": "B09"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_25523_799078&cas=ZpgTZoHLadZDltp4NaWM%2BPKp9mfrSXzrRz2FHYKTDYc&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_25523_799078&cas=ZpgTZoHLadZDltp4NaWM%2BPKp9mfrSXzrRz2FHYKTDYc&hl=ar|HTTP 403 Document",
+        "test": "A01"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27337_359119&cas=pNI%2F7Q0vVGZdvn6YqxCIR43F5ZFIIGf0appZ6Wk0CIQ&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27337_359119&cas=pNI%2F7Q0vVGZdvn6YqxCIR43F5ZFIIGf0appZ6Wk0CIQ&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "A02"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27692_402419&cas=etSvC5KlKrBwV%2BHV7G%2FPkcoUp1u4ZKOEKRH0Q495bPs&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27692_402419&cas=etSvC5KlKrBwV%2BHV7G%2FPkcoUp1u4ZKOEKRH0Q495bPs&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "A02"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27834_877838&cas=wkRp6C%2FbtZ28agnRB%2F1InzOd5zonXEpsoXX2GWvzN%2BA&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27834_877838&cas=wkRp6C%2FbtZ28agnRB%2F1InzOd5zonXEpsoXX2GWvzN%2BA&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "A02"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_28122_843020&cas=bxjPoz1gmQhmekZHB%2BI3OxGD2SSJE5XgcCeyAsq5T0Q&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_28122_843020&cas=bxjPoz1gmQhmekZHB%2BI3OxGD2SSJE5XgcCeyAsq5T0Q&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "A03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_28296_785481&cas=i2HpcjzDk4EfVxk66%2BeA0JysleeB3B%2FV7Gc%2BFuuVIJk&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_28296_785481&cas=i2HpcjzDk4EfVxk66%2BeA0JysleeB3B%2FV7Gc%2BFuuVIJk&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "A03"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_29812_501341&cas=YELwiQ3NwvzZ%2BduJJ6SFwD73zAD4IiCO%2FqEnYIO0VHc&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_29812_501341&cas=YELwiQ3NwvzZ%2BduJJ6SFwD73zAD4IiCO%2FqEnYIO0VHc&hl=ar|HTTP 403 Document",
+        "test": "R01-mobile"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_30636_400600&cas=8Hg8At4oV2GOwMR7xL6NfbgGO3uobLNIhgfKkRxRyHs&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_30636_400600&cas=8Hg8At4oV2GOwMR7xL6NfbgGO3uobLNIhgfKkRxRyHs&hl=ar|HTTP 403 Document",
+        "test": "R01-tablet"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_32701_566618&cas=fRSNIymsdt9aPVfXiiQJdbNG%2BVG06FVGUeM4boOTlFU&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_32701_566618&cas=fRSNIymsdt9aPVfXiiQJdbNG%2BVG06FVGUeM4boOTlFU&hl=ar|HTTP 403 Document",
+        "test": "R03-dark"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_34659_834799&cas=Y6cNnZ5rMw38GTi5LAn5XiNWsQ7jfFyqCnd%2FSArX9l4&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_34659_834799&cas=Y6cNnZ5rMw38GTi5LAn5XiNWsQ7jfFyqCnd%2FSArX9l4&hl=ar|HTTP 403 Document",
+        "test": "P01"
+      }
+    ],
+    "network": [
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=5CB68i4pnAekjehf",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=5CB68i4pnAekjehf|failed: net::ERR_ABORTED (canceled)",
+        "test": "B01"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=tXyZJ52UQVBCVsD3",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=tXyZJ52UQVBCVsD3|failed: net::ERR_ABORTED (canceled)",
+        "test": "B01"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=tXyZJ52UQVBCVsD3",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=tXyZJ52UQVBCVsD3|failed: net::ERR_ABORTED (canceled)",
+        "test": "B01"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=tXyZJ52UQVBCVsD3",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=tXyZJ52UQVBCVsD3|failed: net::ERR_ABORTED (canceled)",
+        "test": "B01"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=5CB68i4pnAekjehf",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=5CB68i4pnAekjehf|failed: net::ERR_ABORTED (canceled)",
+        "test": "B03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=5CB68i4pnAekjehf",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=5CB68i4pnAekjehf|failed: net::ERR_ABORTED (canceled)",
+        "test": "B03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: ",
+        "url": "https://accounts.google.com/gsi/style",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/style|failed: ",
+        "test": "B03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_9458_358251&cas=ZffforTbNVk5kGFsfmJIk5%2FzH2mxLww5Pz1fHC6sCX8&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_9458_358251&cas=ZffforTbNVk5kGFsfmJIk5%2FzH2mxLww5Pz1fHC6sCX8&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "B03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_9816_75623&cas=k%2F8OQLZiESTC9V2dLHduqDZZsAORoZWU7w6z356jFl0&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_9816_75623&cas=k%2F8OQLZiESTC9V2dLHduqDZZsAORoZWU7w6z356jFl0&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "B03"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_10117_906281&cas=5asd7sj7EEREGN1G1P0V5Npk5HLx1kKPQuMCzQn%2BMBI&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_10117_906281&cas=5asd7sj7EEREGN1G1P0V5Npk5HLx1kKPQuMCzQn%2BMBI&hl=ar|HTTP 403 Document",
+        "test": "B03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=2Md0sTUZcnjCijMr",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=2Md0sTUZcnjCijMr|failed: net::ERR_ABORTED (canceled)",
+        "test": "B04"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_10689_897281&cas=kQA0UZpwgLR46RKWs%2FYo2hWpCB9ppv9u0YMAa6jhbEs&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_10689_897281&cas=kQA0UZpwgLR46RKWs%2FYo2hWpCB9ppv9u0YMAa6jhbEs&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "B04"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=5Ql0lO2lGSZL_1sS",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=5Ql0lO2lGSZL_1sS|failed: net::ERR_ABORTED (canceled)",
+        "test": "B04"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_11160_688463&cas=xChQxx8eKE1CmGG5X5cWI%2B2bwiJlJyKBUlDDqlnr0xE&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_11160_688463&cas=xChQxx8eKE1CmGG5X5cWI%2B2bwiJlJyKBUlDDqlnr0xE&hl=ar|HTTP 403 Document",
+        "test": "B04"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_11570_359034&cas=RWb%2FO%2FBl9PzCyKs6iwky%2B0GhTQ4T86Juy%2BxZe7GJa4A&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_11570_359034&cas=RWb%2FO%2FBl9PzCyKs6iwky%2B0GhTQ4T86Juy%2BxZe7GJa4A&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "B05"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=pfWg1qw4uMxqj7N2",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=pfWg1qw4uMxqj7N2|failed: net::ERR_ABORTED (canceled)",
+        "test": "B05"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=pfWg1qw4uMxqj7N2",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=pfWg1qw4uMxqj7N2|failed: net::ERR_ABORTED (canceled)",
+        "test": "B05"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=pfWg1qw4uMxqj7N2",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=pfWg1qw4uMxqj7N2|failed: net::ERR_ABORTED (canceled)",
+        "test": "B05"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=Jm_KudBfn_F9em99",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=Jm_KudBfn_F9em99|failed: net::ERR_ABORTED (canceled)",
+        "test": "B05"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=Jm_KudBfn_F9em99",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=Jm_KudBfn_F9em99|failed: net::ERR_ABORTED (canceled)",
+        "test": "B05"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=Jm_KudBfn_F9em99",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=Jm_KudBfn_F9em99|failed: net::ERR_ABORTED (canceled)",
+        "test": "B05"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=2h7RqkUd4R7tj9A_",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=2h7RqkUd4R7tj9A_|failed: net::ERR_ABORTED (canceled)",
+        "test": "B06"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=2h7RqkUd4R7tj9A_",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=2h7RqkUd4R7tj9A_|failed: net::ERR_ABORTED (canceled)",
+        "test": "B06"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=2h7RqkUd4R7tj9A_",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=2h7RqkUd4R7tj9A_|failed: net::ERR_ABORTED (canceled)",
+        "test": "B06"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=2h7RqkUd4R7tj9A_",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=2h7RqkUd4R7tj9A_|failed: net::ERR_ABORTED (canceled)",
+        "test": "B06"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=q9qeW4TLPSng93_h",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=q9qeW4TLPSng93_h|failed: net::ERR_ABORTED (canceled)",
+        "test": "B06"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=q9qeW4TLPSng93_h",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=q9qeW4TLPSng93_h|failed: net::ERR_ABORTED (canceled)",
+        "test": "B06"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=q9qeW4TLPSng93_h",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=q9qeW4TLPSng93_h|failed: net::ERR_ABORTED (canceled)",
+        "test": "B06"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=q9qeW4TLPSng93_h",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=q9qeW4TLPSng93_h|failed: net::ERR_ABORTED (canceled)",
+        "test": "B06"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_12095_35842&cas=RFtnSmQRQi8NdYuB1QgvgA%2Bu1zRfhGR7rxqMzpDaAQo&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_12095_35842&cas=RFtnSmQRQi8NdYuB1QgvgA%2Bu1zRfhGR7rxqMzpDaAQo&hl=ar|HTTP 403 Document",
+        "test": "B06"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=YaM2HU4MTygajTCF",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=YaM2HU4MTygajTCF|failed: net::ERR_ABORTED (canceled)",
+        "test": "B06"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=YaM2HU4MTygajTCF",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=YaM2HU4MTygajTCF|failed: net::ERR_ABORTED (canceled)",
+        "test": "B06"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=YaM2HU4MTygajTCF",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=YaM2HU4MTygajTCF|failed: net::ERR_ABORTED (canceled)",
+        "test": "B06"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_12446_586378&cas=q%2B3Bt4Dg6Szlf3Wl%2BnfDEC98%2FlZjHBfrz%2F2FWnv5URM&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_12446_586378&cas=q%2B3Bt4Dg6Szlf3Wl%2BnfDEC98%2FlZjHBfrz%2F2FWnv5URM&hl=ar|HTTP 403 Document",
+        "test": "B06"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=xFVjKFL12UrVWmwy",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=xFVjKFL12UrVWmwy|failed: net::ERR_ABORTED (canceled)",
+        "test": "B07"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=xFVjKFL12UrVWmwy",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=xFVjKFL12UrVWmwy|failed: net::ERR_ABORTED (canceled)",
+        "test": "B07"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=xFVjKFL12UrVWmwy",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=xFVjKFL12UrVWmwy|failed: net::ERR_ABORTED (canceled)",
+        "test": "B07"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=xFVjKFL12UrVWmwy",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=xFVjKFL12UrVWmwy|failed: net::ERR_ABORTED (canceled)",
+        "test": "B07"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=we3ubxF55xroP6U0",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=we3ubxF55xroP6U0|failed: net::ERR_ABORTED (canceled)",
+        "test": "B07"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=we3ubxF55xroP6U0",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=we3ubxF55xroP6U0|failed: net::ERR_ABORTED (canceled)",
+        "test": "B07"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=we3ubxF55xroP6U0",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=we3ubxF55xroP6U0|failed: net::ERR_ABORTED (canceled)",
+        "test": "B07"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=we3ubxF55xroP6U0",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=we3ubxF55xroP6U0|failed: net::ERR_ABORTED (canceled)",
+        "test": "B07"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 404 Document",
+        "url": "http://chate.test:3212/qa-missing-1793203012990",
+        "status": 404,
+        "external": false,
+        "noise": false,
+        "dedupeKey": "network|warn|http://chate.test:3212/qa-missing-1793203012990|HTTP 404 Document",
+        "test": "B08"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=OXEfaXsCQr9qpu4a",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=OXEfaXsCQr9qpu4a|failed: net::ERR_ABORTED (canceled)",
+        "test": "B08"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=OXEfaXsCQr9qpu4a",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=OXEfaXsCQr9qpu4a|failed: net::ERR_ABORTED (canceled)",
+        "test": "B08"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=OXEfaXsCQr9qpu4a",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=OXEfaXsCQr9qpu4a|failed: net::ERR_ABORTED (canceled)",
+        "test": "B08"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=OXEfaXsCQr9qpu4a",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=OXEfaXsCQr9qpu4a|failed: net::ERR_ABORTED (canceled)",
+        "test": "B08"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/workspace?_rsc=OXEfaXsCQr9qpu4a",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/workspace?_rsc=OXEfaXsCQr9qpu4a|failed: net::ERR_ABORTED (canceled)",
+        "test": "B08"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=242tnRB5_IlegzMX",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=242tnRB5_IlegzMX|failed: net::ERR_ABORTED (canceled)",
+        "test": "B08"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=242tnRB5_IlegzMX",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=242tnRB5_IlegzMX|failed: net::ERR_ABORTED (canceled)",
+        "test": "B08"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=242tnRB5_IlegzMX",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=242tnRB5_IlegzMX|failed: net::ERR_ABORTED (canceled)",
+        "test": "B08"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=242tnRB5_IlegzMX",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=242tnRB5_IlegzMX|failed: net::ERR_ABORTED (canceled)",
+        "test": "B08"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/workspace?_rsc=242tnRB5_IlegzMX",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/workspace?_rsc=242tnRB5_IlegzMX|failed: net::ERR_ABORTED (canceled)",
+        "test": "B08"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_13830_661004&cas=GAAcE%2BrfRSBe2JkKXFKcvvvhsbY27oEbVPIdFo4DTk0&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_13830_661004&cas=GAAcE%2BrfRSBe2JkKXFKcvvvhsbY27oEbVPIdFo4DTk0&hl=ar|HTTP 403 Document",
+        "test": "B09"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=v67lk4E8a3YfLt6y",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=v67lk4E8a3YfLt6y|failed: net::ERR_ABORTED (canceled)",
+        "test": "W01"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=v67lk4E8a3YfLt6y",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=v67lk4E8a3YfLt6y|failed: net::ERR_ABORTED (canceled)",
+        "test": "W01"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=v67lk4E8a3YfLt6y",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=v67lk4E8a3YfLt6y|failed: net::ERR_ABORTED (canceled)",
+        "test": "W01"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=v67lk4E8a3YfLt6y",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=v67lk4E8a3YfLt6y|failed: net::ERR_ABORTED (canceled)",
+        "test": "W01"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=Xsk9VVY3wQvHYMzX",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=Xsk9VVY3wQvHYMzX|failed: net::ERR_ABORTED (canceled)",
+        "test": "W02"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=Xsk9VVY3wQvHYMzX",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=Xsk9VVY3wQvHYMzX|failed: net::ERR_ABORTED (canceled)",
+        "test": "W03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=Xsk9VVY3wQvHYMzX",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=Xsk9VVY3wQvHYMzX|failed: net::ERR_ABORTED (canceled)",
+        "test": "W03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=Xsk9VVY3wQvHYMzX",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=Xsk9VVY3wQvHYMzX|failed: net::ERR_ABORTED (canceled)",
+        "test": "W03"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Fetch",
+        "url": "http://chate.test:3212/api/comparisons",
+        "status": 403,
+        "external": false,
+        "noise": false,
+        "dedupeKey": "network|warn|http://chate.test:3212/api/comparisons|HTTP 403 Fetch",
+        "test": "W04"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_25523_799078&cas=ZpgTZoHLadZDltp4NaWM%2BPKp9mfrSXzrRz2FHYKTDYc&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_25523_799078&cas=ZpgTZoHLadZDltp4NaWM%2BPKp9mfrSXzrRz2FHYKTDYc&hl=ar|HTTP 403 Document",
+        "test": "A01"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27337_359119&cas=pNI%2F7Q0vVGZdvn6YqxCIR43F5ZFIIGf0appZ6Wk0CIQ&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27337_359119&cas=pNI%2F7Q0vVGZdvn6YqxCIR43F5ZFIIGf0appZ6Wk0CIQ&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "A02"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=WzUDN3am5ctH078F",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=WzUDN3am5ctH078F|failed: net::ERR_ABORTED (canceled)",
+        "test": "A02"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=WzUDN3am5ctH078F",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=WzUDN3am5ctH078F|failed: net::ERR_ABORTED (canceled)",
+        "test": "A02"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=WzUDN3am5ctH078F",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=WzUDN3am5ctH078F|failed: net::ERR_ABORTED (canceled)",
+        "test": "A02"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27692_402419&cas=etSvC5KlKrBwV%2BHV7G%2FPkcoUp1u4ZKOEKRH0Q495bPs&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27692_402419&cas=etSvC5KlKrBwV%2BHV7G%2FPkcoUp1u4ZKOEKRH0Q495bPs&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "A02"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=JmFnTkhJC5n8mJfW",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=JmFnTkhJC5n8mJfW|failed: net::ERR_ABORTED (canceled)",
+        "test": "A02"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27834_877838&cas=wkRp6C%2FbtZ28agnRB%2F1InzOd5zonXEpsoXX2GWvzN%2BA&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27834_877838&cas=wkRp6C%2FbtZ28agnRB%2F1InzOd5zonXEpsoXX2GWvzN%2BA&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "A02"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_28122_843020&cas=bxjPoz1gmQhmekZHB%2BI3OxGD2SSJE5XgcCeyAsq5T0Q&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_28122_843020&cas=bxjPoz1gmQhmekZHB%2BI3OxGD2SSJE5XgcCeyAsq5T0Q&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "A03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_28296_785481&cas=i2HpcjzDk4EfVxk66%2BeA0JysleeB3B%2FV7Gc%2BFuuVIJk&hl=ar",
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network-failed|error|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_28296_785481&cas=i2HpcjzDk4EfVxk66%2BeA0JysleeB3B%2FV7Gc%2BFuuVIJk&hl=ar|failed: net::ERR_ABORTED (canceled)",
+        "test": "A03"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_29812_501341&cas=YELwiQ3NwvzZ%2BduJJ6SFwD73zAD4IiCO%2FqEnYIO0VHc&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_29812_501341&cas=YELwiQ3NwvzZ%2BduJJ6SFwD73zAD4IiCO%2FqEnYIO0VHc&hl=ar|HTTP 403 Document",
+        "test": "R01-mobile"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_30636_400600&cas=8Hg8At4oV2GOwMR7xL6NfbgGO3uobLNIhgfKkRxRyHs&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_30636_400600&cas=8Hg8At4oV2GOwMR7xL6NfbgGO3uobLNIhgfKkRxRyHs&hl=ar|HTTP 403 Document",
+        "test": "R01-tablet"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_32701_566618&cas=fRSNIymsdt9aPVfXiiQJdbNG%2BVG06FVGUeM4boOTlFU&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_32701_566618&cas=fRSNIymsdt9aPVfXiiQJdbNG%2BVG06FVGUeM4boOTlFU&hl=ar|HTTP 403 Document",
+        "test": "R03-dark"
+      },
+      {
+        "kind": "network",
+        "level": "warn",
+        "text": "HTTP 403 Document",
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_34659_834799&cas=Y6cNnZ5rMw38GTi5LAn5XiNWsQ7jfFyqCnd%2FSArX9l4&hl=ar",
+        "status": 403,
+        "external": true,
+        "noise": false,
+        "dedupeKey": "network|warn|https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_34659_834799&cas=Y6cNnZ5rMw38GTi5LAn5XiNWsQ7jfFyqCnd%2FSArX9l4&hl=ar|HTTP 403 Document",
+        "test": "P01"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=PEFAxh8bFtAgIpcp",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=PEFAxh8bFtAgIpcp|failed: net::ERR_ABORTED (canceled)",
+        "test": "M03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/workspace?_rsc=PEFAxh8bFtAgIpcp",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/workspace?_rsc=PEFAxh8bFtAgIpcp|failed: net::ERR_ABORTED (canceled)",
+        "test": "M03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=PEFAxh8bFtAgIpcp",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=PEFAxh8bFtAgIpcp|failed: net::ERR_ABORTED (canceled)",
+        "test": "M03"
+      },
+      {
+        "kind": "network",
+        "level": "error",
+        "text": "HTTP 503 Fetch",
+        "url": "http://chate.test:3212/api/otp/send",
+        "status": 503,
+        "external": false,
+        "noise": false,
+        "dedupeKey": "network|error|http://chate.test:3212/api/otp/send|HTTP 503 Fetch",
+        "test": "M03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=PEFAxh8bFtAgIpcp",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=PEFAxh8bFtAgIpcp|failed: net::ERR_ABORTED (canceled)",
+        "test": "M03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/workspace?_rsc=pWvc6Rnt86FeKhA3",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/workspace?_rsc=pWvc6Rnt86FeKhA3|failed: net::ERR_ABORTED (canceled)",
+        "test": "M03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/?_rsc=pWvc6Rnt86FeKhA3",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/?_rsc=pWvc6Rnt86FeKhA3|failed: net::ERR_ABORTED (canceled)",
+        "test": "M03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/history?_rsc=pWvc6Rnt86FeKhA3",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/history?_rsc=pWvc6Rnt86FeKhA3|failed: net::ERR_ABORTED (canceled)",
+        "test": "M03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/privacy?_rsc=pWvc6Rnt86FeKhA3",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/privacy?_rsc=pWvc6Rnt86FeKhA3|failed: net::ERR_ABORTED (canceled)",
+        "test": "M03"
+      },
+      {
+        "kind": "network-failed",
+        "level": "error",
+        "text": "failed: net::ERR_ABORTED (canceled)",
+        "url": "http://chate.test:3212/terms?_rsc=pWvc6Rnt86FeKhA3",
+        "external": false,
+        "noise": true,
+        "dedupeKey": "network-failed|error|http://chate.test:3212/terms?_rsc=pWvc6Rnt86FeKhA3|failed: net::ERR_ABORTED (canceled)",
+        "test": "M03"
+      }
+    ],
+    "documents": [
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/api/theme",
+        "method": "POST",
+        "status": null,
+        "location": null
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_9458_358251&cas=ZffforTbNVk5kGFsfmJIk5%2FzH2mxLww5Pz1fHC6sCX8&hl=ar",
+        "method": "GET",
+        "status": null,
+        "location": null
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_9816_75623&cas=k%2F8OQLZiESTC9V2dLHduqDZZsAORoZWU7w6z356jFl0&hl=ar",
+        "method": "GET",
+        "status": null,
+        "location": null
+      },
+      {
+        "url": "http://chate.test:3212/api/theme",
+        "method": "POST",
+        "status": null,
+        "location": null
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_10117_906281&cas=5asd7sj7EEREGN1G1P0V5Npk5HLx1kKPQuMCzQn%2BMBI&hl=ar",
+        "method": "GET",
+        "status": 403
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_10689_897281&cas=kQA0UZpwgLR46RKWs%2FYo2hWpCB9ppv9u0YMAa6jhbEs&hl=ar",
+        "method": "GET",
+        "status": null,
+        "location": null
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_11160_688463&cas=xChQxx8eKE1CmGG5X5cWI%2B2bwiJlJyKBUlDDqlnr0xE&hl=ar",
+        "method": "GET",
+        "status": 403
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_11570_359034&cas=RWb%2FO%2FBl9PzCyKs6iwky%2B0GhTQ4T86Juy%2BxZe7GJa4A&hl=ar",
+        "method": "GET",
+        "status": null,
+        "location": null
+      },
+      {
+        "url": "http://chate.test:3212/terms",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/account",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_12095_35842&cas=RFtnSmQRQi8NdYuB1QgvgA%2Bu1zRfhGR7rxqMzpDaAQo&hl=ar",
+        "method": "GET",
+        "status": 403
+      },
+      {
+        "url": "http://chate.test:3212/history",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_12446_586378&cas=q%2B3Bt4Dg6Szlf3Wl%2BnfDEC98%2FlZjHBfrz%2F2FWnv5URM&hl=ar",
+        "method": "GET",
+        "status": 403
+      },
+      {
+        "url": "http://chate.test:3212/admin",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/qa-missing-1793203012990",
+        "method": "GET",
+        "status": 404
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": null,
+        "location": null
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_13830_661004&cas=GAAcE%2BrfRSBe2JkKXFKcvvvhsbY27oEbVPIdFo4DTk0&hl=ar",
+        "method": "GET",
+        "status": 403
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_25523_799078&cas=ZpgTZoHLadZDltp4NaWM%2BPKp9mfrSXzrRz2FHYKTDYc&hl=ar",
+        "method": "GET",
+        "status": 403
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27337_359119&cas=pNI%2F7Q0vVGZdvn6YqxCIR43F5ZFIIGf0appZ6Wk0CIQ&hl=ar",
+        "method": "GET",
+        "status": null,
+        "location": null
+      },
+      {
+        "url": "http://chate.test:3212/privacy",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/terms",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/account",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27692_402419&cas=etSvC5KlKrBwV%2BHV7G%2FPkcoUp1u4ZKOEKRH0Q495bPs&hl=ar",
+        "method": "GET",
+        "status": null,
+        "location": null
+      },
+      {
+        "url": "http://chate.test:3212/history",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_27834_877838&cas=wkRp6C%2FbtZ28agnRB%2F1InzOd5zonXEpsoXX2GWvzN%2BA&hl=ar",
+        "method": "GET",
+        "status": null,
+        "location": null
+      },
+      {
+        "url": "http://chate.test:3212/admin",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/profile/complete",
+        "method": "GET",
+        "status": null,
+        "location": null
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_28122_843020&cas=bxjPoz1gmQhmekZHB%2BI3OxGD2SSJE5XgcCeyAsq5T0Q&hl=ar",
+        "method": "GET",
+        "status": null,
+        "location": null
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_28296_785481&cas=i2HpcjzDk4EfVxk66%2BeA0JysleeB3B%2FV7Gc%2BFuuVIJk&hl=ar",
+        "method": "GET",
+        "status": null,
+        "location": null
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_29812_501341&cas=YELwiQ3NwvzZ%2BduJJ6SFwD73zAD4IiCO%2FqEnYIO0VHc&hl=ar",
+        "method": "GET",
+        "status": 403
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_30636_400600&cas=8Hg8At4oV2GOwMR7xL6NfbgGO3uobLNIhgfKkRxRyHs&hl=ar",
+        "method": "GET",
+        "status": 403
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_32701_566618&cas=fRSNIymsdt9aPVfXiiQJdbNG%2BVG06FVGUeM4boOTlFU&hl=ar",
+        "method": "GET",
+        "status": 403
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "https://accounts.google.com/gsi/button?type=standard&theme=outline&size=large&text=continue_with&shape=pill&logo_alignment=left&width=320&is_fedcm_supported=true&client_id=1028603654108-8bitjdccmvob4p0t42oh8c5si5ajdd6j.apps.googleusercontent.com&iframe_id=gsi_34659_834799&cas=Y6cNnZ5rMw38GTi5LAn5XiNWsQ7jfFyqCnd%2FSArX9l4&hl=ar",
+        "method": "GET",
+        "status": 403
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/profile/complete",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "url": "http://chate.test:3212/workspace",
+        "method": "GET",
+        "status": 200
+      }
+    ]
+  },
+  "requestCount": 877
+}

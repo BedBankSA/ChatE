@@ -1,0 +1,577 @@
+{
+  "schemaVersion": 1,
+  "kind": "chate-release-verification",
+  "generatedBy": "scripts/qa/verify-release.mjs",
+  "generatedAt": "2026-10-28T14:06:35.947Z",
+  "runId": "2026-10-28T14-06-33-598Z",
+  "mode": "mock",
+  "providerCallsReal": false,
+  "startedAt": "2026-10-28T14:06:33.598Z",
+  "finishedAt": "2026-10-28T14:06:35.947Z",
+  "durationMs": 2349,
+  "projectRoot": "C:\\Users\\dr_em\\OneDrive\\Desktop\\ChatE",
+  "runtime": {
+    "node": "v24.22.1",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "build": {
+    "buildId": "vMZH_347l9JjLHbF8SvV8",
+    "buildAt": "2026-10-28T14:06:06.393Z",
+    "newestSource": "2026-10-28T14:06:06.393Z",
+    "newestSourceFile": ".next/BUILD_ID",
+    "stale": false
+  },
+  "server": {
+    "port": 3221,
+    "host": "chate.test",
+    "baseUrl": "http://127.0.0.1:3221",
+    "hostHeader": "chate.test:3221",
+    "source": "spawned `next start` from the local production build",
+    "readyMs": 937,
+    "stdoutTail": [
+      "▲ Next.js 16.4.3",
+      "- Local: http://127.0.0.1:3221 - Network: http://127.0.0.1:3221",
+      "✓ Ready in 125ms",
+      "✓ Running next.config.ts took 30ms"
+    ],
+    "stderrTail": [
+      "[qa-turnstile-preload] qa.* Turnstile tokens accepted; all other fetch calls pass through",
+      "[qa-mock-preload] OpenRouter + Anthropic mocked (CHATE_E2E_MOCK=1); Turnstile qa.* accepted; all other fetch real"
+    ]
+  },
+  "database": {
+    "path": "data/qa.sqlite",
+    "mode": "QA-only SQLite database"
+  },
+  "storage": {
+    "dir": "scripts/qa/.out/storage-mock",
+    "mode": "QA-only private storage directory"
+  },
+  "turnstile": {
+    "mode": "qa-token-preload",
+    "preload": "scripts/qa/mock-provider-preload.cjs",
+    "note": "Cloudflare Turnstile was satisfied with QA `qa.<action>.<hostname>.<epochMs>` tokens intercepted by a QA-only NODE_OPTIONS preload; this is NOT a real browser widget. Non-QA tokens still reach real Cloudflare, which P06 verifies via the 403 rejection path."
+  },
+  "session": {
+    "mode": "seeded-hmac-signed-session-cookies",
+    "note": "No Google sign-in was performed; cookies were minted locally with the deployment SESSION_SECRET. Cookie values are intentionally not stored in evidence.",
+    "users": [
+      {
+        "key": "unverified",
+        "userId": "qa_user_unverified",
+        "role": "authenticated, phone not verified"
+      },
+      {
+        "key": "unverified2",
+        "userId": "qa_user_unverified2",
+        "role": "authenticated, phone not verified (API-only OTP test user)"
+      },
+      {
+        "key": "verified",
+        "userId": "qa_user_verified",
+        "role": "authenticated, phone verified"
+      },
+      {
+        "key": "nonadmin",
+        "userId": "qa_user_nonadmin",
+        "role": "authenticated, not an admin"
+      },
+      {
+        "key": "admin",
+        "userId": "qa_user_admin",
+        "role": "authenticated admin"
+      }
+    ]
+  },
+  "otpProvider": {
+    "userId": "qa_user_unverified",
+    "phoneMasked": "+96650****567",
+    "transport": "real HTTPS POST over loopback to the local OTP provider stub (throwaway self-signed cert trusted only by the spawned server process via NODE_EXTRA_CA_CERTS)",
+    "providerUrlScheme": "https",
+    "stubKind": "node:https",
+    "stubSource": "TLS loopback stub (real HTTPS round-trip; throwaway self-signed QA cert)",
+    "stubPort": 3999,
+    "stubPath": "/send",
+    "stubAuthEnforced": true,
+    "appRequests": 1,
+    "logFile": "scripts/qa/.out/otp-stub-mock.jsonl",
+    "persistedVerifiedAt": "2026-10-28T14:06:35.289Z"
+  },
+  "credentials": {
+    "source": ".env.local (values never printed or stored)",
+    "openrouterKeyPresent": true,
+    "anthropicKeyPresent": true,
+    "turnstileSecretPresent": true,
+    "sessionSecretPresent": true,
+    "valuesStored": false
+  },
+  "providers": {
+    "providerCallsReal": false,
+    "mockMarker": "إجابة تجريبية",
+    "mockMarkerPresent": true,
+    "comparisonId": "cb59a902-f209-45c0-865e-7e7fa80e4cde",
+    "comparisonAttempts": 1,
+    "runs": [
+      {
+        "modelId": "recursive/flint-v1.0:free",
+        "status": "completed",
+        "providerModelId": "recursive/flint-v1.0:free",
+        "finishReason": "stop",
+        "promptTokens": 48,
+        "completionTokens": 32,
+        "costUsd": null,
+        "completionMs": 1,
+        "errorCode": null,
+        "outputExcerpt": "إجابة تجريبية — رد وهمي محلي من OpenRouter للاختبار فقط، وليس استجابة نموذج حقيقي."
+      },
+      {
+        "modelId": "claude-haiku-5-5",
+        "status": "completed",
+        "providerModelId": "claude-haiku-5-5",
+        "finishReason": "end_turn",
+        "promptTokens": 27,
+        "completionTokens": 4,
+        "costUsd": 0.000005,
+        "completionMs": 1,
+        "errorCode": null,
+        "outputExcerpt": "إجابة تجريبية — رد وهمي محلي من Anthropic للاختبار فقط، وليس استجابة نموذج حقيقي."
+      },
+      {
+        "modelId": "cohere/north-mini-code:free",
+        "status": "completed",
+        "providerModelId": "cohere/north-mini-code:free",
+        "finishReason": "stop",
+        "promptTokens": 48,
+        "completionTokens": 32,
+        "costUsd": null,
+        "completionMs": 2,
+        "errorCode": null,
+        "outputExcerpt": "إجابة تجريبية — رد وهمي محلي من OpenRouter للاختبار فقط، وليس استجابة نموذج حقيقي."
+      },
+      {
+        "modelId": "google/gemma-4-31b-it:free",
+        "status": "completed",
+        "providerModelId": "google/gemma-4-31b-it:free",
+        "finishReason": "stop",
+        "promptTokens": 48,
+        "completionTokens": 32,
+        "costUsd": null,
+        "completionMs": 2,
+        "errorCode": null,
+        "outputExcerpt": "إجابة تجريبية — رد وهمي محلي من OpenRouter للاختبار فقط، وليس استجابة نموذج حقيقي."
+      }
+    ]
+  },
+  "probes": [
+    {
+      "id": "P01",
+      "title": "production server health + non-stale build",
+      "status": "PASS",
+      "expected": "GET /api/health 200 ok (db ok) and .next newer than src/migrations",
+      "actual": "health 200; build vMZH_347l9JjLHbF8SvV8 @ 2026-10-28T14:06:06.393Z",
+      "data": {
+        "build": {
+          "buildId": "vMZH_347l9JjLHbF8SvV8",
+          "buildAt": "2026-10-28T14:06:06.393Z",
+          "newestSource": "2026-10-28T14:06:06.393Z",
+          "newestSourceFile": ".next/BUILD_ID",
+          "stale": false
+        },
+        "serverReadyMs": 937
+      },
+      "durationMs": 4
+    },
+    {
+      "id": "P02",
+      "title": "root HTML shell + security headers",
+      "status": "PASS",
+      "expected": "200 Arabic RTL HTML + CSP/frame-ancestors, nosniff, DENY, referrer, permissions, COOP, HSTS; no x-powered-by",
+      "actual": "all 7 headers present and strong; CSP 453 chars",
+      "data": {
+        "contentSecurityPolicyChars": 453,
+        "crossOriginOpenerPolicy": "same-origin-allow-popups",
+        "hsts": "max-age=31536000; includeSubDomains"
+      },
+      "durationMs": 54
+    },
+    {
+      "id": "P03",
+      "title": "GET /api/models catalog contract",
+      "status": "PASS",
+      "expected": "200 envelope with full catalog incl. 3 free models + claude-haiku-5-5",
+      "actual": "23 models incl. all 4 comparison ids",
+      "data": {
+        "modelCount": 23,
+        "requiredPresent": [
+          "cohere/north-mini-code:free",
+          "google/gemma-4-31b-it:free",
+          "recursive/flint-v1.0:free",
+          "claude-haiku-5-5"
+        ]
+      },
+      "durationMs": 5
+    },
+    {
+      "id": "P04",
+      "title": "public pages render (Arabic) + anonymous redirects/404",
+      "status": "PASS",
+      "expected": "6 public pages 200 Arabic; /workspace + /profile/complete -> 307 /; unknown -> 404",
+      "actual": "/ 200; /privacy 200; /terms 200; /account 200; /history 200; /admin 200; /workspace 307 -> /; 404 (localized=true)",
+      "data": {
+        "pages": [
+          "/ 200",
+          "/privacy 200",
+          "/terms 200",
+          "/account 200",
+          "/history 200",
+          "/admin 200"
+        ],
+        "notFoundLocalized": true
+      },
+      "durationMs": 69
+    },
+    {
+      "id": "P05",
+      "title": "anonymous API requests -> 401 anonymous",
+      "status": "PASS",
+      "expected": "401 anonymous on comparisons/uploads/otp send+verify/history/comparison detail",
+      "actual": "POST /api/comparisons 401; POST /api/uploads 401; POST /api/otp/send 401; POST /api/otp/verify 401; GET /api/history 401; GET /api/comparisons/<uuid> 401",
+      "data": {
+        "cases": [
+          "POST /api/comparisons 401",
+          "POST /api/uploads 401",
+          "POST /api/otp/send 401",
+          "POST /api/otp/verify 401",
+          "GET /api/history 401",
+          "GET /api/comparisons/<uuid> 401"
+        ]
+      },
+      "durationMs": 63
+    },
+    {
+      "id": "P06",
+      "title": "Turnstile gate: missing token, bad token, token replay",
+      "status": "PASS",
+      "expected": "missing token 403; non-qa/invalid token 403 (real Cloudflare rejection path); replayed qa token 403",
+      "actual": "missing 403, bad token 403, fresh upload 200, replay 403 (reused)",
+      "data": {
+        "missing": 403,
+        "badToken": 403,
+        "replay": 403,
+        "replayCode": "reused"
+      },
+      "durationMs": 344
+    },
+    {
+      "id": "P07",
+      "title": "OTP send via real loopback HTTP stub -> verify -> phone_verified_at",
+      "status": "PASS",
+      "expected": "send 200 -> real HTTPS stub receives code -> wrong 403 OTP_MISMATCH + remainingAttempts -> correct 200 verified -> profiles.phone_verified_at persisted -> reused 403",
+      "actual": "send 200; code delivered over HTTPS after 1 stub request; wrong 403; verify 200; phone_verified_at set; reuse 403",
+      "data": {
+        "userId": "qa_user_unverified",
+        "phoneMasked": "+96650****567",
+        "transport": "real HTTPS POST over loopback to the local OTP provider stub (throwaway self-signed cert trusted only by the spawned server process via NODE_EXTRA_CA_CERTS)",
+        "providerUrlScheme": "https",
+        "stubKind": "node:https",
+        "stubSource": "TLS loopback stub (real HTTPS round-trip; throwaway self-signed QA cert)",
+        "stubPort": 3999,
+        "stubPath": "/send",
+        "stubAuthEnforced": true,
+        "appRequests": 1,
+        "logFile": "scripts/qa/.out/otp-stub-mock.jsonl",
+        "persistedVerifiedAt": "2026-10-28T14:06:35.289Z"
+      },
+      "durationMs": 25
+    },
+    {
+      "id": "P08",
+      "title": "upload real bytes (txt+pdf+png) via multipart",
+      "status": "PASS",
+      "expected": "3 real-byte files stored (txt/pdf/png), uuid ids, detected types, textExtracted flags, private storage rows + on-disk sha256",
+      "actual": "3 files stored; sizes match fixtures; txt extracted=true pdf extracted=true png extracted=false; sha256 verified on disk",
+      "data": {
+        "ids": [
+          "6a2f6ead-6a4c-43c8-a83a-6de5cc0776ec",
+          "95a84984-7980-4e81-b5a0-f070c2351199",
+          "f6d717e3-5352-4677-ba0c-c93eb2793a9b"
+        ],
+        "names": [
+          "qa-attachment.txt",
+          "qa-attachment.pdf",
+          "qa-attachment.png"
+        ],
+        "entries": [
+          {
+            "id": "6a2f6ead-6a4c-43c8-a83a-6de5cc0776ec",
+            "name": "qa-attachment.txt",
+            "detectedType": "text",
+            "byteSize": 226,
+            "textExtracted": true
+          },
+          {
+            "id": "95a84984-7980-4e81-b5a0-f070c2351199",
+            "name": "qa-attachment.pdf",
+            "detectedType": "pdf",
+            "byteSize": 624,
+            "textExtracted": true
+          },
+          {
+            "id": "f6d717e3-5352-4677-ba0c-c93eb2793a9b",
+            "name": "qa-attachment.png",
+            "detectedType": "png",
+            "byteSize": 70,
+            "textExtracted": false
+          }
+        ],
+        "filesRows": [
+          {
+            "id": "6a2f6ead-6a4c-43c8-a83a-6de5cc0776ec",
+            "detectedType": "text",
+            "byteSize": 226,
+            "status": "stored"
+          },
+          {
+            "id": "95a84984-7980-4e81-b5a0-f070c2351199",
+            "detectedType": "pdf",
+            "byteSize": 624,
+            "status": "stored"
+          },
+          {
+            "id": "f6d717e3-5352-4677-ba0c-c93eb2793a9b",
+            "detectedType": "png",
+            "byteSize": 70,
+            "status": "stored"
+          }
+        ],
+        "storageChecks": [
+          {
+            "id": "6a2f6ead-6a4c-43c8-a83a-6de5cc0776ec",
+            "byteSize": 226,
+            "detectedType": "text",
+            "onDisk": true,
+            "sha256Verified": true
+          },
+          {
+            "id": "95a84984-7980-4e81-b5a0-f070c2351199",
+            "byteSize": 624,
+            "detectedType": "pdf",
+            "onDisk": true,
+            "sha256Verified": true
+          },
+          {
+            "id": "f6d717e3-5352-4677-ba0c-c93eb2793a9b",
+            "byteSize": 70,
+            "detectedType": "png",
+            "onDisk": true,
+            "sha256Verified": true
+          }
+        ]
+      },
+      "durationMs": 72
+    },
+    {
+      "id": "P09",
+      "title": "comparison with attachmentIds -> 4 independent runs settle (mock)",
+      "status": "PASS",
+      "expected": "4 runs settle independently; all completed with the mock provider marker (providerCallsReal=false)",
+      "actual": "4/4 completed with mock marker; statuses=recursive/flint-v1.0:free:completed,claude-haiku-5-5:completed,cohere/north-mini-code:free:completed,google/gemma-4-31b-it:free:completed; attempts=1; attachmentsIncluded=3",
+      "data": {
+        "providerCallsReal": false,
+        "mockMarkerPresent": true,
+        "attempts": [
+          {
+            "attempt": 1,
+            "comparisonId": "cb59a902-f209-45c0-865e-7e7fa80e4cde",
+            "settleMs": 510,
+            "settled": true,
+            "runs": [
+              {
+                "modelId": "recursive/flint-v1.0:free",
+                "provider": "openrouter",
+                "status": "completed",
+                "message": null,
+                "outputExcerpt": "إجابة تجريبية — رد وهمي محلي من OpenRouter للاختبار فقط، وليس استجابة نموذج حقيقي."
+              },
+              {
+                "modelId": "claude-haiku-5-5",
+                "provider": "anthropic",
+                "status": "completed",
+                "message": null,
+                "outputExcerpt": "إجابة تجريبية — رد وهمي محلي من Anthropic للاختبار فقط، وليس استجابة نموذج حقيقي."
+              },
+              {
+                "modelId": "cohere/north-mini-code:free",
+                "provider": "openrouter",
+                "status": "completed",
+                "message": null,
+                "outputExcerpt": "إجابة تجريبية — رد وهمي محلي من OpenRouter للاختبار فقط، وليس استجابة نموذج حقيقي."
+              },
+              {
+                "modelId": "google/gemma-4-31b-it:free",
+                "provider": "openrouter",
+                "status": "completed",
+                "message": null,
+                "outputExcerpt": "إجابة تجريبية — رد وهمي محلي من OpenRouter للاختبار فقط، وليس استجابة نموذج حقيقي."
+              }
+            ]
+          }
+        ],
+        "attachmentsIncluded": true
+      },
+      "durationMs": 522
+    },
+    {
+      "id": "P10",
+      "title": "DB run telemetry (tokens/cost/model) + attachment evidence binding",
+      "status": "PASS",
+      "expected": "evidence payload binds the uploaded attachmentIds (+ extracted text); 4 model_runs rows with model/tokens/cost/ms telemetry",
+      "actual": "attachmentIds bound (3); 4 run rows; haiku tokens 27/4, cost 0.000005",
+      "data": {
+        "attachmentIdsBound": 3,
+        "evidenceTextLength": 375,
+        "evidenceTextWarnings": [],
+        "telemetry": [
+          {
+            "modelId": "recursive/flint-v1.0:free",
+            "status": "completed",
+            "providerModelId": "recursive/flint-v1.0:free",
+            "finishReason": "stop",
+            "promptTokens": 48,
+            "completionTokens": 32,
+            "costUsd": null,
+            "completionMs": 1,
+            "errorCode": null,
+            "outputExcerpt": "إجابة تجريبية — رد وهمي محلي من OpenRouter للاختبار فقط، وليس استجابة نموذج حقيقي."
+          },
+          {
+            "modelId": "claude-haiku-5-5",
+            "status": "completed",
+            "providerModelId": "claude-haiku-5-5",
+            "finishReason": "end_turn",
+            "promptTokens": 27,
+            "completionTokens": 4,
+            "costUsd": 0.000005,
+            "completionMs": 1,
+            "errorCode": null,
+            "outputExcerpt": "إجابة تجريبية — رد وهمي محلي من Anthropic للاختبار فقط، وليس استجابة نموذج حقيقي."
+          },
+          {
+            "modelId": "cohere/north-mini-code:free",
+            "status": "completed",
+            "providerModelId": "cohere/north-mini-code:free",
+            "finishReason": "stop",
+            "promptTokens": 48,
+            "completionTokens": 32,
+            "costUsd": null,
+            "completionMs": 2,
+            "errorCode": null,
+            "outputExcerpt": "إجابة تجريبية — رد وهمي محلي من OpenRouter للاختبار فقط، وليس استجابة نموذج حقيقي."
+          },
+          {
+            "modelId": "google/gemma-4-31b-it:free",
+            "status": "completed",
+            "providerModelId": "google/gemma-4-31b-it:free",
+            "finishReason": "stop",
+            "promptTokens": 48,
+            "completionTokens": 32,
+            "costUsd": null,
+            "completionMs": 2,
+            "errorCode": null,
+            "outputExcerpt": "إجابة تجريبية — رد وهمي محلي من OpenRouter للاختبار فقط، وليس استجابة نموذج حقيقي."
+          }
+        ]
+      },
+      "durationMs": 0
+    },
+    {
+      "id": "P11",
+      "title": "history API + /history list & detail pages show the real comparison",
+      "status": "PASS",
+      "expected": "history API row for the comparison; /history links to it; /history/[id] 200 with question + attachment names",
+      "actual": "API row runCount=4 completed=4; list page link ok; detail page 200",
+      "data": {
+        "historyRow": {
+          "id": "cb59a902-f209-45c0-865e-7e7fa80e4cde",
+          "status": "closed",
+          "createdAt": "2026-10-28T14:06:35.370Z",
+          "runCount": 4,
+          "completedCount": 4,
+          "modelIds": [
+            "recursive/flint-v1.0:free",
+            "claude-haiku-5-5",
+            "cohere/north-mini-code:free",
+            "google/gemma-4-31b-it:free"
+          ]
+        }
+      },
+      "durationMs": 33
+    },
+    {
+      "id": "P12",
+      "title": "cross-user IDOR + malformed ids -> 404",
+      "status": "PASS",
+      "expected": "cross-user API+page 404; malformed/unknown ids 404",
+      "actual": "other-user API 404, other-user page 404, malformed API+page 404, unknown API 404",
+      "data": {
+        "statuses": [
+          404,
+          404,
+          404,
+          404,
+          404
+        ]
+      },
+      "durationMs": 24
+    },
+    {
+      "id": "P13",
+      "title": "no secret values in evidence, server output, or probes",
+      "status": "PASS",
+      "expected": "no .env.local secret value and no sk-* key appears in probes, evidence candidates, or server logs",
+      "actual": "0 findings; redaction self-check passed; 7 sensitive values tracked (never stored)",
+      "data": {
+        "sensitiveValueCount": 7,
+        "findings": 0
+      },
+      "durationMs": 1
+    },
+    {
+      "id": "P14",
+      "title": "optional browser smoke via scripts/qa CDP tooling",
+      "status": "SKIP",
+      "expected": "",
+      "actual": "",
+      "data": null,
+      "error": "optional per task-5; API E2E is the required bar. No Chrome CDP browser pass was run in this invocation.",
+      "durationMs": 0
+    }
+  ],
+  "summary": {
+    "total": 14,
+    "passed": 13,
+    "failed": 0,
+    "skipped": 1,
+    "verdict": "PASS"
+  },
+  "caveats": [
+    "Turnstile: qa.* tokens intercepted by scripts/qa/turnstile-preload.cjs (QA preload), not a real browser Turnstile widget; a real Cloudflare rejection path is still exercised for non-qa tokens.",
+    "Session: signed session cookies were seeded locally instead of performing a Google sign-in; the same SESSION_SECRET as the server is used.",
+    "OTP/SMS: no carrier SMS gateway exists here; the provider round-trip is a real HTTPS request to a local OTP provider stub with a throwaway self-signed loopback certificate trusted only by the spawned server process (no carrier SMS was sent).",
+    "Providers: OpenRouter and Anthropic calls were MOCKED by scripts/qa/mock-provider-preload.cjs; this run proves the app flow, not provider integration.",
+    "Free OpenRouter models may legitimately fail with upstream RATE_LIMIT/429; the release gate only requires they settle without breaking the other independent runs.",
+    "Browser QA (scripts/qa CDP) is optional per task-5 and was not executed by this harness invocation."
+  ],
+  "redaction": {
+    "applied": true,
+    "sensitiveValueCount": 7,
+    "findings": 0,
+    "redactedOccurrences": 0
+  },
+  "commands": {
+    "mock": "C:\\Pak\\node.exe scripts/qa/verify-release.mjs --mode=mock",
+    "live": "C:\\Pak\\node.exe scripts/qa/verify-release.mjs --mode=live",
+    "note": "Run from the repo root after the Lead builds .next (`npm run build`) and while ports 3221/3222 are free."
+  }
+}
